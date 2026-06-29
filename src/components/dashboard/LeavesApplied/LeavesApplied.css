@@ -1,0 +1,159 @@
+.leaves-applied {
+  min-height: 60vh;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.present-table-container {
+  width: min(900px, 100%);
+  background: var(--card-bg-gradient);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--card-border-color);
+  box-shadow: var(--card-shadow);
+  padding: 20px 22px;
+}
+
+.table-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px 18px;
+}
+
+.table-actions h2 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--text-dark);
+}
+
+.table-sub {
+  margin: 0;
+  color: #5b6b74;
+}
+
+.present-table-wrap {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.present-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.present-table th,
+.present-table td {
+  text-align: left;
+  padding: 16px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.present-table thead th {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-dark);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 12px;
+}
+
+.present-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.approved-row {
+  background: rgba(63, 143, 255, 0.1);
+}
+
+.unapproved-row {
+  background: rgba(255, 99, 71, 0.12);
+}
+
+.pending-row {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.status-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+}
+
+.status-badge.approved {
+  background: rgba(46, 204, 113, 0.15);
+  color: #10703d;
+}
+
+.status-badge.unapproved {
+  background: rgba(255, 99, 71, 0.14);
+  color: #8b2d14;
+}
+
+.status-badge.pending {
+  background: rgba(255, 193, 7, 0.14);
+  color: #7b5e00;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tick-btn,
+.cancel-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 14px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tick-btn {
+  background: linear-gradient(90deg, var(--accent-start), var(--accent-end));
+  color: #fff;
+}
+
+.cancel-btn {
+  background: rgba(255, 99, 71, 0.12);
+  color: #8b2d14;
+}
+
+.tick-btn:hover,
+.cancel-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+}
+
+.action-icon {
+  font-size: 14px;
+}
+
+@media (max-width: 720px) {
+  .present-table-container {
+    width: 100%;
+  }
+
+  .present-table th,
+  .present-table td {
+    padding: 12px 10px;
+  }
+}

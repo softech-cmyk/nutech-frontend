@@ -1,0 +1,46 @@
+:root {
+	--card-bg-gradient: linear-gradient(135deg, #ecfdf5 0%, #f0f9ff 48%, #e7f5ff 100%);
+	--card-border-color: rgba(16, 185, 129, 0.14);
+	--card-radius: 20px;
+	--card-shadow: 0 28px 70px rgba(14, 83, 94, 0.08);
+	--accent-start: #0f6b5d;
+	--accent-end: #2f89d4;
+	--card-padding: 20px;
+	--text-dark: #0f3f4f;
+}
+
+/* Apply a consistent themed-card style to all card-like containers used across the app */
+.dashboard-card,
+.present-table-container,
+.punch-card,
+.present-card,
+.card,
+.login-card,
+.signup-card {
+	background: var(--card-bg-gradient) !important;
+	border-radius: var(--card-radius) !important;
+	border: 1px solid var(--card-border-color) !important;
+	box-shadow: var(--card-shadow) !important;
+}
+
+/* Small helper to keep inner areas visually consistent */
+.themed-inner {
+	background: rgba(255,255,255,0.6);
+	border-radius: calc(var(--card-radius) - 6px);
+	padding: var(--card-padding);
+}
+
+/* Table headers using app accent */
+.present-table thead th {
+	background: linear-gradient(90deg, var(--accent-start) 0%, var(--accent-end) 100%) !important;
+	color: #fff !important;
+}
+
+/* Make images and thumbnails slightly rounded consistently */
+.selfie-thumb,
+.avatar,
+.profile-pic {
+	border-radius: 8px;
+	border: 1px solid rgba(0,0,0,0.05);
+}
+
