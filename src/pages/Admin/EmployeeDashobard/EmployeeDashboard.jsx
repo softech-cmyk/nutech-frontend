@@ -1,69 +1,115 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./EmployeeDashboard.css";
 import logo from "../../../assets/Nutech-removebg-preview.png";
 
+const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api`;
+
+const getGreeting = () => {
+  const h = new Date().getHours();
+  if (h < 12) return "Good Morning";
+  if (h < 17) return "Good Afternoon";
+  return "Good Evening";
+};
+
+const fmtTime = (iso) => {
+  if (!iso) return "--:--";
+  return new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+};
+
+const timeToPercent = (iso) => {
+  const d = new Date(iso);
+  const mins  = d.getHours() * 60 + d.getMinutes();
+  const start = 10 * 60;       // 10:00 AM
+  const end   = 18 * 60 + 30;  // 6:30 PM
+  return Math.max(0, Math.min(100, ((mins - start) / (end - start)) * 100));
+};
+
+const navItems = [
+  { id: "dashboard",  label: "Dashboard",        icon: "ti-layout-dashboard", path: "/EmployeeDashboard"      },
+  { id: "punch",      label: "Punch Attendance", icon: "ti-fingerprint",      path: "/PunchAttendance"         },
+  { id: "attendance", label: "My Attendance",    icon: "ti-calendar-check",   path: "/AttendanceRecords"       },
+  { id: "leave",      label: "Apply Leave",      icon: "ti-calendar-plus",    path: "/LeaveApplicationButton"  },
+];
+
 const EmployeeDashboard = () => {
+  const navigate   = useNavigate();
+  const [activeNav, setActiveNav]   = useState("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [user, setUser]             = useState(null);
+  const [manager, setManager]       = useState(null);
+  const [todayAtt, setTodayAtt]     = useState(null);
   const today = new Date();
-  const todayLabel = today.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-  const dateOptions = ["Today", "Date to Another One", "Last Month and Year"];
-  const [selectedOption, setSelectedOption] = useState(dateOptions[0]);
-  const [employeeName] = useState(
-    () => localStorage.getItem("employeeName") || "User"
-  );
-  const [datePanelOpen, setDatePanelOpen] = useState(false);
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
-  const [yearOption, setYearOption] = useState(String(today.getFullYear()));
-  const [activeNav, setActiveNav] = useState("dashboard");
 
-  const years = Array.from({ length: 6 }, (_, index) =>
-    String(today.getFullYear() - index)
-  );
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) { navigate("/Login"); return; }
 
-  const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: "ti-layout-dashboard" },
-    { id: "punch", label: "Punch Attendance", icon: "ti-fingerprint" },
-  ];
+    // fetch fresh user data from DB (picks up name, managerId, role)
+    fetch(`${API}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.user) { navigate("/Login"); return; }
+        const u = d.user;
+        setUser(u);
+        localStorage.setItem("user", JSON.stringify(u));
 
-  const weeklyStatus = [
-    { day: "Mon", label: "Present" },
-    { day: "Tue", label: "Present" },
-    { day: "Wed", label: "Absent" },
-    { day: "Thu", label: "Present" },
-    { day: "Fri", label: "Present" },
-    { day: "Sat", label: "Weekend" },
-    { day: "Sun", label: "Weekend" },
-  ];
+        if (u.managerId) {
+          fetch(`${API}/users/${u.managerId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+            .then((r) => r.json())
+            .then((md) => setManager(md.user || null))
+            .catch(() => {});
+        }
+      })
+      .catch(() => navigate("/Login"));
 
-  const handleMarkAttendance = () => {
-    console.log("Mark my Attendance clicked");
+    // fetch today's attendance
+    fetch(`${API}/attendance/today`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((d) => setTodayAtt(d.attendance || null))
+      .catch(() => {});
+  }, [navigate]);
+
+  const initials = (name, phone) => {
+    if (name) return name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+    return phone ? phone.slice(-2) : "??";
   };
 
-  const handleLeaveApplication = () => {
-    console.log("Redirect to Leave Application page");
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/Login");
   };
 
   return (
-    <div className="emp">
-      {/* Sidebar */}
-      <aside className="emp__sidebar">
-        <div className="emp__sidebar-logo">
-          <img src={logo} alt="Nutech International" />
+    <div className="ed">
+      {/* ── Mobile overlay ── */}
+      {sidebarOpen && (
+        <div className="ed__drawer-overlay" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* ── Sidebar ── */}
+      <aside className={`ed__sidebar ${sidebarOpen ? "ed__sidebar--open" : ""}`}>
+        <button className="ed__sidebar-close" onClick={() => setSidebarOpen(false)}>
+          <i className="ti ti-x" />
+        </button>
+
+        <div className="ed__sidebar-logo">
+          <img src={logo} alt="Nutech" />
         </div>
 
-        <nav className="emp__nav">
+        <nav className="ed__nav">
           {navItems.map((item) => (
             <button
               key={item.id}
-              className={
-                activeNav === item.id ? "emp__nav-item is-active" : "emp__nav-item"
-              }
-              onClick={() => setActiveNav(item.id)}
+              className={`ed__nav-item ${activeNav === item.id ? "is-active" : ""}`}
+              onClick={() => { setActiveNav(item.id); navigate(item.path); setSidebarOpen(false); }}
             >
               <i className={`ti ${item.icon}`} aria-hidden="true" />
               {item.label}
@@ -71,113 +117,148 @@ const EmployeeDashboard = () => {
           ))}
         </nav>
 
-        <div className="emp__sidebar-footer">
-          <span className="emp__sidebar-tag">
-            Partnering AgEv Research Since 1992
-          </span>
-        </div>
+        <button className="ed__logout" onClick={handleLogout}>
+          <i className="ti ti-logout" aria-hidden="true" /> Logout
+        </button>
       </aside>
 
-      {/* Main */}
-      <main className="emp__main">
-        <div className="emp__top">
-          <div>
-            <p className="emp__welcome">Hi! {employeeName}</p>
-            <p className="emp__subtitle">
-              Happy to have you here — let’s keep your attendance tidy.
-            </p>
-          </div>
-          <div className="emp__header-actions">
-            <button className="emp__attendance-btn" onClick={handleMarkAttendance}>
-              <i className="ti ti-clock-check" aria-hidden="true" />
-              Mark my Attendance
-            </button>
-            <button className="emp__leave-btn" onClick={handleLeaveApplication}>
-              <i className="ti ti-calendar-plus" aria-hidden="true" />
-              Apply for Leave
-            </button>
-          </div>
-        </div>
+      {/* ── Main ── */}
+      <main className="ed__main">
+        <div className="ed__overlay">
 
-        <div className="emp__date-section">
-          <div className="emp__today-row">
+          {/* Header */}
+          <div className="ed__header">
             <div>
-              <span className="emp__today-label">Today</span>
-              <button
-                className="emp__today-button"
-                onClick={() => setDatePanelOpen((prev) => !prev)}
-              >
-                {todayLabel}
+              <button className="ed__hamburger" onClick={() => setSidebarOpen(true)}>
+                <i className="ti ti-menu-2" />
+              </button>
+              <p className="ed__greeting">{getGreeting()}, {user?.name || user?.phone || "Employee"}</p>
+              <p className="ed__sub">Have a productive day at Nutech</p>
+            </div>
+            <div className="ed__header-right">
+              <div className="ed__header-date">
+                <i className="ti ti-calendar" />
+                {today.toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              </div>
+              <button className="ed__mark-btn" onClick={() => navigate("/PunchAttendance")}>
+                <i className="ti ti-fingerprint" /> Mark my Attendance
+              </button>
+              <button className="ed__leave-btn" onClick={() => navigate("/LeaveApplicationButton")}>
+                <i className="ti ti-calendar-plus" /> Apply for Leave
               </button>
             </div>
-
-            <div className="emp__date-options">
-              {dateOptions.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  className={
-                    option === selectedOption
-                      ? "emp__date-option is-active"
-                      : "emp__date-option"
-                  }
-                  onClick={() => setSelectedOption(option)}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
           </div>
 
-          {datePanelOpen && (
-            <div className="emp__date-panel">
-              <div className="emp__date-panel-row">
-                <label>
-                  From
-                  <input
-                    type="date"
-                    value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
-                  />
-                </label>
-                <label>
-                  To
-                  <input
-                    type="date"
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                  />
-                </label>
-                <label>
-                  Year
-                  <select
-                    value={yearOption}
-                    onChange={(e) => setYearOption(e.target.value)}
-                  >
-                    {years.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+          {/* Cards row */}
+          <div className="ed__cards">
+
+            {/* Employee profile card */}
+            <div className="ed__card ed__card--profile">
+              <div className="ed__avatar">
+                {user?.photo
+                  ? <img src={user.photo} alt="profile" />
+                  : <span>{initials(user?.name, user?.phone)}</span>
+                }
+              </div>
+              <div className="ed__card-info">
+                <p className="ed__card-name">{user?.name || "—"}</p>
+                <p className="ed__card-phone">{user?.phone || "—"}</p>
+                <span className="ed__badge ed__badge--emp">Employee</span>
               </div>
             </div>
-          )}
-        </div>
 
-        <div className="emp__weekly">
-          <p className="emp__section-label">Weekly attendance overview</p>
-          <div className="emp__weekly-days">
-            {weeklyStatus.map((item) => (
-              <div key={item.day} className="emp__day-card">
-                <span className="emp__day-name">{item.day}</span>
-                <span className={`emp__day-label ${item.label.toLowerCase()}`}>
-                  {item.label}
+            {/* Manager card — only show if manager exists */}
+            {manager && (
+              <div className="ed__card ed__card--manager">
+                <div className="ed__card-label">
+                  <i className="ti ti-briefcase" /> Department
+                </div>
+                <div className="ed__avatar ed__avatar--sm">
+                  <span>{initials(manager.name, manager.phone)}</span>
+                </div>
+                <div className="ed__card-info">
+                  <p className="ed__card-name">{manager.name || manager.phone}</p>
+                  <p className="ed__card-dept">
+                    <i className="ti ti-building" /> {manager.department || "—"}
+                  </p>
+                  <span className="ed__badge ed__badge--mgr">Manager</span>
+                </div>
+              </div>
+            )}
+
+            {/* Department card */}
+            <div className="ed__card ed__card--dept">
+              <div className="ed__card-label">
+                <i className="ti ti-building" /> Department
+              </div>
+              <p className="ed__dept-name">{user?.department || "—"}</p>
+              <p className="ed__dept-sub">Your assigned department</p>
+            </div>
+
+          </div>
+
+
+          {/* Today's Schedule */}
+          <div className="ed__schedule">
+            <div className="ed__schedule-head">
+              <span className="ed__section-title">
+                <i className="ti ti-clock" /> Today's Schedule
+              </span>
+              <span className="ed__schedule-time">10:00 AM – 6:30 PM</span>
+            </div>
+
+            <div className="ed__today-row">
+
+              {/* Date block */}
+              <div className="ed__today-date">
+                <span className="ed__today-day">
+                  {today.toLocaleDateString("en-US", { weekday: "long" })}
+                </span>
+                <span className="ed__today-num">
+                  {today.getDate()}
+                </span>
+                <span className="ed__today-month">
+                  {today.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
                 </span>
               </div>
-            ))}
+
+              {/* Timeline */}
+              <div className="ed__timeline">
+                <div className="ed__tl-ends">
+                  <span>10:00 AM</span>
+                  <span>Office Hours</span>
+                  <span>6:30 PM</span>
+                </div>
+
+                <div className="ed__tl-track">
+                  <div className="ed__tl-fill" />
+
+                  {todayAtt?.punchIn && (
+                    <div className="ed__tl-point" style={{ left: `${timeToPercent(todayAtt.punchIn)}%` }}>
+                      <div className="ed__tl-dot ed__tl-dot--in" />
+                      <span className="ed__tl-point-label">
+                        {fmtTime(todayAtt.punchIn)}<br />In
+                      </span>
+                    </div>
+                  )}
+
+                  {todayAtt?.punchOut && (
+                    <div className="ed__tl-point" style={{ left: `${timeToPercent(todayAtt.punchOut)}%` }}>
+                      <div className="ed__tl-dot ed__tl-dot--out" />
+                      <span className="ed__tl-point-label">
+                        {fmtTime(todayAtt.punchOut)}<br />Out
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {!todayAtt?.punchIn && (
+                  <p className="ed__tl-hint">Not punched in yet</p>
+                )}
+              </div>
+            </div>
           </div>
+
         </div>
       </main>
     </div>

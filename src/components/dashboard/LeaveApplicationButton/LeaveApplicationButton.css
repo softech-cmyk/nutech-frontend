@@ -1,20 +1,22 @@
 :root {
-  --purple: #7f77dd;
-  --purple-dark: #534ab7;
-  --purple-deep: #3c3489;
-  --blue: #2563eb;
-  --soft: #efedfe;
-  --line: #e5e3dc;
-  --text: #444441;
+  --nt-green:       #4ade80;
+  --nt-green-mid:   #22c55e;
+  --nt-green-dark:  #15803d;
+  --nt-green-deep:  #14532d;
+  --nt-green-soft:  #f0fdf4;
+  --nt-blue:        #38bdf8;
+  --nt-blue-dark:   #0369a1;
+  --nt-text:        #1f3b22;
+  --nt-muted:       #6b8f6e;
+  --nt-line:        #bbf7d0;
 
-  /* mapped theme tokens */
-  --card-bg-gradient: #ffffff;
-  --card-radius: 22px;
-  --card-border-color: #ddd8f5;
-  --card-shadow: 0 20px 45px rgba(83, 74, 183, 0.15);
-  --text-dark: var(--purple-deep);
-  --accent-start: var(--purple-dark);
-  --accent-end: var(--blue);
+  --card-bg-gradient:  #ffffff;
+  --card-radius:       22px;
+  --card-border-color: #bbf7d0;
+  --card-shadow:       0 20px 45px rgba(21, 128, 61, 0.13);
+  --text-dark:         #14532d;
+  --accent-start:      #15803d;
+  --accent-end:        #0369a1;
 }
 
 * {
@@ -28,7 +30,7 @@
   justify-content: center;
   align-items: center;
   font-family: "Inter", sans-serif;
-  background: linear-gradient(165deg, #ffffff, #f6f4ff, #eef2ff);
+  background: linear-gradient(165deg, #ffffff 0%, #f0fdf4 55%, #e0f2fe 100%);
 }
 
 .application-container {
@@ -36,7 +38,7 @@
   background: var(--card-bg-gradient);
   border-radius: var(--card-radius);
   border: 1px solid var(--card-border-color);
-  border-left: 6px solid var(--purple);
+  border-left: 6px solid var(--nt-green-mid);
   box-shadow: var(--card-shadow);
   padding: 28px 24px;
 }
@@ -44,7 +46,7 @@
 .app-header {
   margin-bottom: 24px;
   padding-bottom: 18px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--nt-line);
 }
 
 .app-header h2 {
@@ -56,7 +58,7 @@
 
 .app-sub {
   margin: 6px 0 0 0;
-  color: var(--purple-dark);
+  color: var(--nt-green-dark);
   font-size: 14px;
   font-style: italic;
 }
@@ -84,17 +86,19 @@
 .form-textarea {
   padding: 12px 14px;
   border-radius: 10px;
-  border: 2px solid #ddd8f5;
+  border: 2px solid #bbf7d0;
   font-size: 14px;
   font-family: inherit;
   resize: vertical;
-  color: var(--text);
+  color: var(--nt-text);
+  background: #f0fdf4;
 }
 
 .form-textarea:focus {
   outline: none;
-  border-color: var(--purple);
-  box-shadow: 0 0 0 3px rgba(127, 119, 221, 0.15);
+  border-color: var(--nt-green-mid);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
 }
 
 .leave-type-options {
@@ -106,24 +110,25 @@
 .leave-pill {
   padding: 8px 14px;
   border-radius: 999px;
-  border: 2px solid #ddd8f5;
+  border: 2px solid #bbf7d0;
   background: #fff;
   cursor: pointer;
-  color: var(--purple-dark);
+  color: var(--nt-green-dark);
   font-weight: 700;
   font-size: 12px;
   transition: all 0.2s ease;
 }
 
 .leave-pill:hover {
-  border-color: var(--purple);
+  border-color: var(--nt-green-mid);
+  background: #f0fdf4;
 }
 
 .leave-pill.active {
   background: linear-gradient(90deg, var(--accent-start), var(--accent-end));
   color: #fff;
   border-color: transparent;
-  box-shadow: 0 8px 18px rgba(83, 74, 183, 0.25);
+  box-shadow: 0 8px 18px rgba(21, 128, 61, 0.25);
 }
 
 .date-picker-wrapper {
@@ -137,9 +142,9 @@
   width: 100%;
   padding: 12px 14px;
   border-radius: 10px;
-  border: 2px solid #ddd8f5;
-  background: #fff;
-  color: var(--text);
+  border: 2px solid #bbf7d0;
+  background: #f0fdf4;
+  color: var(--nt-text);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -147,13 +152,14 @@
 }
 
 .date-input-btn:hover {
-  border-color: var(--purple);
-  box-shadow: 0 4px 12px rgba(83, 74, 183, 0.12);
+  border-color: var(--nt-green-mid);
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(21, 128, 61, 0.12);
 }
 
 .calendar-icon {
   font-size: 14px;
-  color: var(--purple);
+  color: var(--nt-green-dark);
   flex-shrink: 0;
 }
 
@@ -164,8 +170,8 @@
   right: 0;
   background: rgba(255, 255, 255, 0.97);
   border-radius: 12px;
-  border: 1px solid #ddd8f5;
-  box-shadow: 0 12px 32px rgba(83, 74, 183, 0.18);
+  border: 1px solid #bbf7d0;
+  box-shadow: 0 12px 32px rgba(21, 128, 61, 0.15);
   padding: 12px;
   z-index: 10;
 }
@@ -173,16 +179,17 @@
 .date-picker-input {
   width: 100%;
   padding: 10px 12px;
-  border: 2px solid #ddd8f5;
+  border: 2px solid #bbf7d0;
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
   cursor: pointer;
+  background: #f0fdf4;
 }
 
 .date-picker-input:focus {
   outline: none;
-  border-color: var(--purple);
+  border-color: var(--nt-green-mid);
 }
 
 .form-actions {
@@ -195,7 +202,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
+  padding: 12px 24px;
   border-radius: 999px;
   border: none;
   background: linear-gradient(90deg, var(--accent-start), var(--accent-end));
@@ -204,11 +211,12 @@
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 8px 18px rgba(21, 128, 61, 0.25);
 }
 
 .send-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(83, 74, 183, 0.25);
+  box-shadow: 0 12px 28px rgba(21, 128, 61, 0.35);
 }
 
 .send-btn:disabled {
@@ -217,7 +225,7 @@
 }
 
 .send-btn.submitted {
-  background: linear-gradient(90deg, #10b981, #34d399);
+  background: linear-gradient(90deg, var(--nt-green-dark), var(--nt-green-mid));
 }
 
 .send-icon {
@@ -225,20 +233,9 @@
 }
 
 @media (max-width: 720px) {
-  .application-container {
-    width: 100%;
-    padding: 20px 16px;
-  }
-
-  .app-header {
-    margin-bottom: 18px;
-    padding-bottom: 12px;
-  }
-
-  .leave-type-options {
-    gap: 8px;
-  }
-
+  .application-container { width: 100%; padding: 20px 16px; }
+  .app-header { margin-bottom: 18px; padding-bottom: 12px; }
+  .leave-type-options { gap: 8px; }
   .date-picker-popup {
     position: fixed;
     top: auto;
@@ -247,4 +244,19 @@
     right: 0;
     border-radius: 16px 16px 0 0;
   }
+}
+
+@media (max-width: 480px) {
+  .leave-application { padding: 0.75rem; align-items: flex-start; }
+  .application-container { padding: 1rem; border-radius: 16px; }
+  .app-header h2 { font-size: 1.2rem; }
+  .app-sub { font-size: 0.85rem; }
+  .leave-pill { padding: 7px 12px; font-size: 0.8rem; }
+  .form-textarea { font-size: 0.9rem; }
+  .send-btn { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 360px) {
+  .leave-pill { padding: 6px 10px; font-size: 0.75rem; }
+  .form-label { font-size: 0.8rem; }
 }

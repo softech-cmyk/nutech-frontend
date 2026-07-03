@@ -2,31 +2,39 @@ import { useState } from "react";
 import { FaCalendar, FaPaperPlane } from "react-icons/fa";
 import "./LeaveApplicationButton.css";
 
+const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api`;
+
 const LeaveApplicationButton = () => {
-  const [reason, setReason] = useState("");
-  const [leaveDate, setLeaveDate] = useState(new Date().toISOString().split("T")[0]);
+  const [reason, setReason]         = useState("");
+  const [leaveDate, setLeaveDate]   = useState(new Date().toISOString().split("T")[0]);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [leaveType, setLeaveType] = useState("CL");
+  const [submitted, setSubmitted]   = useState(false);
+  const [leaveType, setLeaveType]   = useState("CL");
+  const [error, setError]           = useState("");
 
   const leaveTypes = ["CL", "SL", "EL", "PWL"];
 
-  const handleSend = () => {
-    if (reason.trim() && leaveDate) {
-      const payload = {
-        reason,
-        date: leaveDate,
-        leaveType,
-        submittedAt: new Date().toISOString(),
-      };
-      console.log("Leave application submitted:", payload);
+  const handleSend = async () => {
+    if (!reason.trim() || !leaveDate) { setError("Please fill in all fields."); return; }
+    setError("");
+    const token = localStorage.getItem("token");
+    try {
+      const res  = await fetch(`${API}/leaves/apply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ leaveType, reason, leaveDate }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
       setSubmitted(true);
       setTimeout(() => {
         setReason("");
         setLeaveDate(new Date().toISOString().split("T")[0]);
         setLeaveType("CL");
         setSubmitted(false);
-      }, 2000);
+      }, 2500);
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -38,6 +46,7 @@ const LeaveApplicationButton = () => {
           <p className="app-sub">Submit your leave request with date and reason.</p>
         </div>
 
+        {error && <p style={{ color: "#ef4444", padding: "0 1rem", fontSize: "0.88rem" }}>{error}</p>}
         <div className="form-section">
           {/* Leave Type */}
           <div className="form-group">

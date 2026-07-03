@@ -1,25 +1,18 @@
-/* Tabler icons (used for the small input/feature icons).
-   Add this line to your index.html <head> if it isn't already there:
-   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css" />
-*/
-
 :root {
-  --nt-green: #97c459;
-  --nt-green-dark: #639922;
-  --nt-purple: #7f77dd;
-  --nt-purple-dark: #534ab7;
-  --nt-purple-deep: #3c3489;
-  --nt-purple-soft: #efedfe;
-  --nt-ink: #2c2c2a;
-  --nt-text: #444441;
-  --nt-muted: #888780;
-  --nt-line: #e5e3dc;
-  --nt-field-bg: #f0edff;
+  --nt-green:       #4ade80;
+  --nt-green-mid:   #22c55e;
+  --nt-green-dark:  #15803d;
+  --nt-green-deep:  #14532d;
+  --nt-blue:        #38bdf8;
+  --nt-blue-dark:   #0369a1;
+  --nt-ink:         #1a2e1c;
+  --nt-text:        #1f3b22;
+  --nt-muted:       #6b8f6e;
+  --nt-line:        #bbf7d0;
+  --nt-field-bg:    #f0fdf4;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 .signup {
   display: grid;
@@ -38,7 +31,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background: linear-gradient(150deg, #1e1b3a 0%, #2d2550 55%, #3c3489 100%);
+  background: linear-gradient(150deg, #052e16 0%, #14532d 55%, #166534 100%);
 }
 
 .signup__brand-blob {
@@ -51,29 +44,20 @@
   right: -50px;
   width: 200px;
   height: 200px;
-  background: rgba(151, 196, 89, 0.13);
+  background: rgba(74, 222, 128, 0.18);
 }
 .signup__brand-blob--purple {
   bottom: 40px;
   left: -60px;
   width: 150px;
   height: 150px;
-  background: rgba(124, 119, 221, 0.2);
+  background: rgba(56, 189, 248, 0.18);
 }
 
-.signup__brand-logo {
-  position: relative;
-  z-index: 1;
-}
-.signup__brand-logo img {
-  height: 104px;
-  width: auto;
-}
+.signup__brand-logo { position: relative; z-index: 1; }
+.signup__brand-logo img { height: 104px; width: auto; }
 
-.signup__brand-copy {
-  position: relative;
-  z-index: 1;
-}
+.signup__brand-copy { position: relative; z-index: 1; }
 .signup__brand-rule {
   display: block;
   width: 48px;
@@ -94,7 +78,7 @@
   font-size: 1.15rem;
   font-style: italic;
   font-weight: 500;
-  color: #c2bcf5;
+  color: #86efac;
   line-height: 1.6;
 }
 
@@ -113,25 +97,20 @@
   gap: 8px;
   font-size: 1rem;
   font-weight: 500;
-  color: #cecbf6;
+  color: #bbf7d0;
 }
-.signup__brand-features li .ti-leaf {
-  color: var(--nt-green);
-  font-size: 22px;
-}
-.signup__brand-features li .ti-shield-check {
-  color: #afa9ec;
-  font-size: 22px;
-}
+.signup__brand-features li .ti-leaf       { color: var(--nt-green); font-size: 22px; }
+.signup__brand-features li .ti-shield-check { color: var(--nt-blue); font-size: 22px; }
 
-/* ---------- Right form panel (purple-tinted) ---------- */
+/* ---------- Right form panel ---------- */
 .signup__panel {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 3rem 2.5rem;
-  background: linear-gradient(165deg, #ffffff 0%, #f6f4ff 55%, #efedfe 100%);
-  border-left: 4px solid var(--nt-purple);
+  background: linear-gradient(165deg, #ffffff 0%, #f0fdf4 55%, #dcfce7 100%);
+  border-left: 4px solid var(--nt-green-mid);
+  overflow-y: auto;
 }
 .signup__form {
   width: 100%;
@@ -142,25 +121,25 @@
   margin: 0 0 6px;
   font-size: 2.4rem;
   font-weight: 800;
-  color: var(--nt-purple-deep);
+  color: var(--nt-green-deep);
   letter-spacing: -0.5px;
 }
 .signup__subtitle {
   margin: 0 0 2rem;
   font-size: 1.05rem;
   font-style: italic;
-  color: var(--nt-purple-dark);
+  color: var(--nt-green-dark);
 }
 
 .signup__label {
   display: block;
   font-size: 1rem;
   font-weight: 700;
-  color: var(--nt-purple-dark);
+  color: var(--nt-green-dark);
   margin-bottom: 8px;
 }
 
-/* ---------- Fields (purple touch) ---------- */
+/* ---------- Fields ---------- */
 .signup__field {
   display: flex;
   align-items: center;
@@ -169,23 +148,19 @@
   padding: 0 16px;
   margin-bottom: 1.4rem;
   background: var(--nt-field-bg);
-  border: 2px solid #ddd8f5;
+  border: 2px solid #bbf7d0;
   border-radius: 12px;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease,
-    background 0.18s ease;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
-.signup__field:hover {
-  border-color: #c2bcf5;
-}
+.signup__field:hover { border-color: #86efac; }
 .signup__field:focus-within {
   background: #fff;
-  border-color: var(--nt-purple);
-  box-shadow: 0 0 0 5px rgba(127, 119, 221, 0.18);
+  border-color: var(--nt-green-mid);
+  box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.18);
 }
 .signup__field-icon {
   font-size: 22px;
-  color: var(--nt-purple);
-  transition: color 0.18s ease;
+  color: var(--nt-green-dark);
 }
 .signup__field input {
   flex: 1;
@@ -198,7 +173,7 @@
   min-width: 0;
 }
 .signup__field input::placeholder {
-  color: #b4b2a9;
+  color: #a3c4a8;
   font-weight: 400;
   font-style: italic;
 }
@@ -210,47 +185,56 @@
   display: flex;
   padding: 2px;
 }
-.signup__toggle:hover {
-  color: var(--nt-purple);
+.signup__toggle:hover { color: var(--nt-green-dark); }
+.signup__toggle .ti { font-size: 22px; }
+
+/* ---------- Role selector ---------- */
+.signup__role-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 1.4rem;
 }
-.signup__toggle .ti {
-  font-size: 22px;
+.signup__role-btn {
+  flex: 1;
+  height: 56px;
+  border: 2px solid #bbf7d0;
+  border-radius: 14px;
+  background: var(--nt-field-bg);
+  color: var(--nt-green-dark);
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.18s ease;
+}
+.signup__role-btn .ti { font-size: 20px; }
+.signup__role-btn:not(.signup__role-btn--active):hover {
+  border-color: var(--nt-green-mid);
+  background: #dcfce7;
+}
+.signup__role-btn--active.signup__role-btn--emp {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--nt-green-dark), var(--nt-green-mid));
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(21, 128, 61, 0.32);
+}
+.signup__role-btn--active.signup__role-btn--admin {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--nt-blue-dark), var(--nt-blue));
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(3, 105, 161, 0.32);
 }
 
-/* ---------- Phone + Send OTP row ---------- */
+/* ---------- Phone row ---------- */
 .signup__phone-row {
   display: flex;
   gap: 12px;
   align-items: stretch;
 }
-.signup__phone-row .signup__field {
-  flex: 1;
-}
-.signup__otp-btn {
-  height: 56px;
-  margin-bottom: 1.4rem;
-  padding: 0 20px;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  white-space: nowrap;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #fff;
-  background: linear-gradient(90deg, var(--nt-green-dark), #4f7d1a);
-  box-shadow: 0 8px 18px rgba(99, 153, 34, 0.3);
-  transition: transform 0.12s ease, box-shadow 0.18s ease, opacity 0.18s ease;
-}
-.signup__otp-btn:hover:not(:disabled) {
-  box-shadow: 0 10px 24px rgba(99, 153, 34, 0.42);
-}
-.signup__otp-btn:active:not(:disabled) {
-  transform: scale(0.97);
-}
-.signup__otp-btn:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
+.signup__phone-row .signup__field { flex: 1; }
 
 /* ---------- Submit ---------- */
 .signup__submit {
@@ -267,19 +251,13 @@
   font-size: 1.2rem;
   font-weight: 700;
   color: #fff;
-  background: linear-gradient(90deg, var(--nt-purple-dark), var(--nt-purple));
-  box-shadow: 0 10px 24px rgba(83, 74, 183, 0.32);
-  transition: transform 0.12s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+  background: linear-gradient(90deg, var(--nt-green-dark), var(--nt-green-mid));
+  box-shadow: 0 10px 24px rgba(21, 128, 61, 0.32);
+  transition: transform 0.12s ease, box-shadow 0.18s ease;
 }
-.signup__submit:hover {
-  box-shadow: 0 12px 30px rgba(83, 74, 183, 0.45);
-}
-.signup__submit:active {
-  transform: scale(0.985);
-}
-.signup__submit .ti {
-  font-size: 22px;
-}
+.signup__submit:hover { box-shadow: 0 12px 30px rgba(21, 128, 61, 0.45); }
+.signup__submit:active { transform: scale(0.985); }
+.signup__submit .ti { font-size: 22px; }
 
 /* ---------- Divider ---------- */
 .signup__divider {
@@ -297,14 +275,11 @@
   content: "";
   flex: 1;
   height: 1.5px;
-  background: #ddd8f5;
+  background: #bbf7d0;
 }
 
-/* ---------- Social (real brand colors) ---------- */
-.signup__social {
-  display: flex;
-  gap: 12px;
-}
+/* ---------- Social ---------- */
+.signup__social { display: flex; gap: 12px; }
 .signup__social-btn {
   flex: 1;
   height: 52px;
@@ -318,35 +293,20 @@
   font-weight: 700;
   color: #fff;
   border: none;
-  transition: transform 0.12s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  transition: transform 0.12s ease, filter 0.18s ease, box-shadow 0.18s ease;
 }
-.signup__social-btn .ti {
-  font-size: 22px;
-  color: #fff;
-}
-.signup__social-btn:active {
-  transform: scale(0.985);
-}
-
-/* Google — official Google blue (#4285F4) */
+.signup__social-btn .ti { font-size: 22px; color: #fff; }
+.signup__social-btn:active { transform: scale(0.985); }
 .signup__social-btn:first-child {
   background: #4285f4;
   box-shadow: 0 4px 12px rgba(66, 133, 244, 0.32);
 }
-.signup__social-btn:first-child:hover {
-  filter: brightness(1.05);
-  box-shadow: 0 6px 16px rgba(66, 133, 244, 0.45);
-}
-
-/* Microsoft — official Microsoft blue (#00A4EF) */
+.signup__social-btn:first-child:hover { filter: brightness(1.05); }
 .signup__social-btn:last-child {
   background: #00a4ef;
   box-shadow: 0 4px 12px rgba(0, 164, 239, 0.32);
 }
-.signup__social-btn:last-child:hover {
-  filter: brightness(1.05);
-  box-shadow: 0 6px 16px rgba(0, 164, 239, 0.45);
-}
+.signup__social-btn:last-child:hover { filter: brightness(1.05); }
 
 /* ---------- Footer ---------- */
 .signup__footer {
@@ -356,67 +316,47 @@
   color: var(--nt-text);
 }
 .signup__footer-link {
-  color: var(--nt-purple);
+  color: var(--nt-green-dark);
   font-weight: 700;
   font-style: italic;
   text-decoration: none;
 }
 .signup__footer-link:hover {
-  color: var(--nt-purple-dark);
+  color: var(--nt-green-deep);
   text-decoration: underline;
 }
 
-/* ---------- Responsive ---------- */
-@media (max-width: 860px) {
-  .signup {
-    grid-template-columns: 1fr;
-  }
-  .signup__brand {
-    min-height: 240px;
-    padding: 2.25rem;
-  }
-  .signup__panel {
-    border-left: none;
-    border-top: 4px solid var(--nt-purple);
-  }
-}
-
-@media (max-width: 480px) {
-  .signup__phone-row {
-    flex-direction: column;
-  }
-  .signup__otp-btn {
-    height: 50px;
-    margin-bottom: 0.4rem;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .signup__submit,
-  .signup__field,
-  .signup__otp-btn {
-    transition: none;
-  }
-}
-
-/* ---------- OTP sent hint ---------- */
-.signup__otp-hint {
+/* ---------- Error ---------- */
+.signup__error {
   display: flex;
   align-items: center;
-  gap: 7px;
-  margin: -0.6rem 0 0.9rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--nt-green-dark);
+  gap: 10px;
+  background: #fceeee;
+  color: #a32d2d;
+  border: 1.5px solid #f0c1c1;
+  border-radius: 11px;
+  padding: 12px 14px;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
 }
-.signup__otp-hint .ti {
-  font-size: 18px;
-}
+.signup__error .ti { font-size: 20px; }
 
-/* ---------- Country code selector ---------- */
-.signup__field--phone {
-  padding-left: 8px;
+/* ---------- Select dropdown ---------- */
+.signup__select {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--nt-ink);
+  cursor: pointer;
 }
+.signup__select option { color: var(--nt-ink); }
+
+/* ---------- Country selector ---------- */
+.signup__field--phone { padding-left: 8px; }
 .signup__country {
   position: relative;
   display: flex;
@@ -426,20 +366,9 @@
   padding: 0 6px;
   cursor: pointer;
 }
-.signup__country-flag {
-  font-size: 22px;
-  line-height: 1;
-}
-.signup__country-code {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--nt-purple-dark);
-}
-.signup__country-caret {
-  font-size: 16px;
-  color: var(--nt-purple);
-}
-/* the real <select> sits invisibly on top so the native dropdown opens */
+.signup__country-flag { font-size: 22px; line-height: 1; }
+.signup__country-code { font-size: 1.1rem; font-weight: 700; color: var(--nt-green-dark); }
+.signup__country-caret { font-size: 16px; color: var(--nt-green-mid); }
 .signup__country-select {
   position: absolute;
   inset: 0;
@@ -453,7 +382,38 @@
 .signup__phone-divider {
   width: 1.5px;
   height: 26px;
-  background: #ddd8f5;
+  background: #bbf7d0;
   margin: 0 10px 0 4px;
   flex-shrink: 0;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 860px) {
+  .signup { grid-template-columns: 1fr; }
+  .signup__brand { min-height: 240px; padding: 2.25rem; }
+  .signup__panel { border-left: none; border-top: 4px solid var(--nt-green-mid); }
+}
+@media (max-width: 480px) {
+  .signup__phone-row { flex-direction: column; }
+  .signup__panel { padding: 2rem 1.25rem; }
+  .signup__title { font-size: 1.9rem; }
+  .signup__brand { min-height: 180px; padding: 1.5rem; }
+  .signup__brand-copy h2 { font-size: 1.5rem; }
+  .signup__tagline { font-size: 0.95rem; }
+  .signup__brand-features { flex-direction: column; gap: 0.6rem; }
+  .signup__role-row { gap: 8px; }
+  .signup__role-btn { height: 48px; font-size: 0.95rem; }
+}
+
+@media (max-width: 360px) {
+  .signup__panel { padding: 1.5rem 1rem; }
+  .signup__title { font-size: 1.6rem; }
+  .signup__field { height: 50px; padding: 0 12px; }
+  .signup__submit { height: 50px; font-size: 1.05rem; }
+  .signup__social { gap: 8px; }
+  .signup__social-btn { height: 46px; font-size: 0.95rem; }
+  .signup__role-btn { height: 44px; font-size: 0.88rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .signup__submit, .signup__field { transition: none; }
 }

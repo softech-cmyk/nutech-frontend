@@ -1,80 +1,134 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import "./LeavesApplied.css";
 
+const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api`;
+
 const LeavesApplied = () => {
-  const [requests, setRequests] = useState([
-    { name: "John Doe", reason: "Family emergency", date: "2026-06-24", status: "Pending" },
-    { name: "Jane Smith", reason: "Medical appointment", date: "2026-06-24", status: "Pending" },
-    { name: "Ravi Kumar", reason: "Travel delay", date: "2026-06-24", status: "Pending" },
-  ]);
+  const navigate              = useNavigate();
+  const [leaves, setLeaves]   = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const updateStatus = (index, status) => {
-    setRequests((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], status };
-      return next;
-    });
+  const fetchLeaves = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) { navigate("/Login"); return; }
+    setLoading(true);
+    try {
+      const res  = await fetch(`${API}/leaves/all`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setLeaves(data.leaves || []);
+    } catch (err) {
+      console.error("LeavesApplied fetch error:", err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    fetchLeaves();
+    const interval = setInterval(fetchLeaves, 30000);
+    return () => clearInterval(interval);
+  }, [fetchLeaves]);
+
+  const handleAction = async (id, action) => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API}/leaves/${id}/${action}`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setLeaves((prev) =>
+          prev.map((l) =>
+            l._id === id ? { ...l, status: action === "approve" ? "approved" : "rejected" } : l
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Action failed:", err.message);
+    }
   };
 
-  const resetStatus = (index) => {
-    setRequests((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], status: "Pending" };
-      return next;
-    });
-  };
+  const pending = leaves.filter((l) => l.status === "pending").length;
 
   return (
     <div className="leaves-applied">
       <div className="present-table-container">
         <div className="table-actions">
-          <h2>Leaves Applied</h2>
-          <p className="table-sub">Review leave requests and approve or cancel them from the same theme.</p>
+          <div>
+            <h2>Applied Leaves</h2>
+            <p className="table-sub">Review and approve or reject leave requests.</p>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            {pending > 0 && <span className="la__pending-badge">{pending} pending</span>}
+            <button className="la__refresh" onClick={fetchLeaves}>
+              <i className="ti ti-refresh" /> Refresh
+            </button>
+          </div>
         </div>
 
         <div className="present-table-wrap">
-          <table className="present-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Reason</th>
-                <th>Date</th>
-                <th>Option</th>
-              </tr>
-            </thead>
-            <tbody>
-              {requests.map((request, index) => (
-                <tr
-                  key={index}
-                  className={request.status === "Approved" ? "approved-row" : request.status === "Unapproved" ? "unapproved-row" : "pending-row"}
-                >
-                  <td>{request.name}</td>
-                  <td>{request.reason}</td>
-                  <td>{request.date}</td>
-                  <td>
-                    {request.status === "Pending" ? (
-                      <div className="action-buttons">
-                        <button type="button" className="tick-btn" onClick={() => updateStatus(index, "Approved")}> 
-                          <FaCheck className="action-icon" />
-                        </button>
-                        <button type="button" className="cancel-btn" onClick={() => updateStatus(index, "Unapproved")}> 
-                          <FaTimes className="action-icon" />
-                        </button>
-                      </div>
-                    ) : (
-                      <span
-                        className={`status-badge ${request.status.toLowerCase()}`}
-                        onClick={() => resetStatus(index)}
-                      >
-                        {request.status}
-                      </span>
-                    )}
-                  </td>
+          {loading ? (
+            <p className="la__empty">Loading...</p>
+          ) : leaves.length === 0 ? (
+            <p className="la__empty">No leave applications yet.</p>
+          ) : (
+            <table className="present-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Employee</th>
+                  <th>Role</th>
+                  <th>Type</th>
+                  <th>Date</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {leaves.map((l, i) => (
+                  <tr key={l._id}>
+                    <td>{i + 1}</td>
+                    <td>
+                      <div className="user-info">
+                        <div className="user-avatar">
+                          {(l.userId?.name || l.userId?.phone || "?")[0].toUpperCase()}
+                        </div>
+                        <span>{l.userId?.name || l.userId?.phone || "—"}</span>
+                      </div>
+                    </td>
+                    <td style={{ textTransform: "capitalize" }}>{l.userId?.role || "—"}</td>
+                    <td><span className="la__type-badge">{l.leaveType}</span></td>
+                    <td>{l.leaveDate}</td>
+                    <td className="la__reason">{l.reason}</td>
+                    <td>
+                      <span className={`la__status la__status--${l.status}`}>
+                        {l.status.charAt(0).toUpperCase() + l.status.slice(1)}
+                      </span>
+                    </td>
+                    <td>
+                      {l.status === "pending" ? (
+                        <div className="action-cell">
+                          <button className="approve-btn" onClick={() => handleAction(l._id, "approve")}>
+                            <FaCheck /> Approve
+                          </button>
+                          <button className="reject-btn" onClick={() => handleAction(l._id, "reject")}>
+                            <FaTimes /> Reject
+                          </button>
+                        </div>
+                      ) : (
+                        <span style={{ color: "#aaa", fontSize: "0.82rem" }}>Done</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>

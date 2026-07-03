@@ -1,89 +1,70 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Login.css";
 import logo from "../../../assets/Nutech-removebg-preview.png";
 
-const API = "http://localhost:5000/api/auth";
+const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/auth`;
 
-const countries = [
-  { code: "+91", flag: "🇮🇳", name: "India" },
-  { code: "+1", flag: "🇺🇸", name: "United States" },
-  { code: "+44", flag: "🇬🇧", name: "United Kingdom" },
-  { code: "+61", flag: "🇦🇺", name: "Australia" },
-  { code: "+971", flag: "🇦🇪", name: "UAE" },
-  { code: "+65", flag: "🇸🇬", name: "Singapore" },
-  { code: "+49", flag: "🇩🇪", name: "Germany" },
-  { code: "+33", flag: "🇫🇷", name: "France" },
-  { code: "+81", flag: "🇯🇵", name: "Japan" },
-  { code: "+86", flag: "🇨🇳", name: "China" },
-  { code: "+880", flag: "🇧🇩", name: "Bangladesh" },
-  { code: "+92", flag: "🇵🇰", name: "Pakistan" },
-  { code: "+94", flag: "🇱🇰", name: "Sri Lanka" },
-  { code: "+977", flag: "🇳🇵", name: "Nepal" },
-  { code: "+966", flag: "🇸🇦", name: "Saudi Arabia" },
-];
-
-const SignUp = () => {
-  const [countryCode, setCountryCode] = useState("+91");
+const Login = () => {
+  const navigate = useNavigate();
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
-
-  const handleSendOtp = async () => {
-    if (!phoneNumber) {
-      alert("Please enter your phone number first.");
-      return;
-    }
-    try {
-      const res = await fetch(`${API}/send-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phoneNumber, countryCode }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-      setOtpSent(true);
-    } catch (err) {
-      alert(err.message);
-    }
-  };
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!phoneNumber || !password) {
+      setError("Please enter your phone number and password.");
+      return;
+    }
+    setError("");
+    setLoading(true);
     try {
-      const res = await fetch(`${API}/signup`, {
+      const res = await fetch(`${API}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phoneNumber, countryCode, otp, password }),
+        body: JSON.stringify({ phone: phoneNumber, password }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
+
       localStorage.setItem("token", data.token);
-      // redirect to dashboard here
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      if (data.user.mustChangePassword) {
+        navigate("/ChangePassword");
+      } else if (data.user.role === "manager") {
+        navigate("/managerdashboard");
+      } else {
+        navigate("/EmployeeDashboard");
+      }
     } catch (err) {
-      alert(err.message);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="signup">
+    <div className="login">
       {/* Left brand panel */}
-      <aside className="signup__brand">
-        <div className="signup__brand-blob signup__brand-blob--green" />
-        <div className="signup__brand-blob signup__brand-blob--purple" />
+      <aside className="login__brand">
+        <div className="login__brand-blob login__brand-blob--green" />
+        <div className="login__brand-blob login__brand-blob--purple" />
 
-        <div className="signup__brand-logo">
+        <div className="login__brand-logo">
           <img src={logo} alt="Nutech International" />
         </div>
 
-        <div className="signup__brand-copy">
-          <span className="signup__brand-rule" />
+        <div className="login__brand-copy">
+          <span className="login__brand-rule" />
           <h2>Join the Nutech research hub</h2>
-          <p className="signup__tagline">Partnering AgEv Research Since 1992</p>
+          <p className="login__tagline">Partnering AgEv Research Since 1992</p>
         </div>
 
-        <ul className="signup__brand-features">
+        <ul className="login__brand-features">
           <li>
             <i className="ti ti-leaf" aria-hidden="true" />
             Sustainable
@@ -96,105 +77,51 @@ const SignUp = () => {
       </aside>
 
       {/* Right form panel */}
-      <main className="signup__panel">
-        <form className="signup__form" onSubmit={handleSubmit} noValidate>
-          <h1 className="signup__title">Create account</h1>
-          <p className="signup__subtitle">Set up your Nutech workspace</p>
+      <main className="login__panel">
+        <form className="login__form" onSubmit={handleSubmit} noValidate>
+          <h1 className="login__title">Welcome back</h1>
+          <p className="login__subtitle">Sign in to your Nutech workspace</p>
 
-          <label className="signup__label" htmlFor="phone">
-            Phone number
-          </label>
-          <div className="signup__phone-row">
-            <div className="signup__field signup__field--phone">
-              <div className="signup__country">
-                <span className="signup__country-flag" aria-hidden="true">
-                  {countries.find((c) => c.code === countryCode)?.flag}
-                </span>
-                <select
-                  className="signup__country-select"
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                  aria-label="Country code"
-                >
-                  {countries.map((c) => (
-                    <option key={c.code + c.name} value={c.code}>
-                      {c.flag} {c.code} {c.name}
-                    </option>
-                  ))}
-                </select>
-                <span className="signup__country-code">{countryCode}</span>
-                <i
-                  className="ti ti-chevron-down signup__country-caret"
-                  aria-hidden="true"
-                />
-              </div>
-              <span className="signup__phone-divider" />
-              <input
-                id="phone"
-                type="tel"
-                inputMode="numeric"
-                maxLength={10}
-                placeholder="98765 43210"
-                value={phoneNumber}
-                onChange={(e) =>
-                  setPhoneNumber(e.target.value.replace(/[^0-9]/g, ""))
-                }
-                autoComplete="tel"
-              />
-            </div>
-            <button
-              type="button"
-              className="signup__otp-btn"
-              onClick={handleSendOtp}
-            >
-              {otpSent ? "Resend" : "Send OTP"}
-            </button>
-          </div>
-
-          {/* OTP box — appears after clicking Send OTP */}
-          {otpSent && (
-            <div className="signup__otp-wrap">
-              <label className="signup__label" htmlFor="otp">
-                Enter OTP
-              </label>
-              <p className="signup__otp-hint">
-                <i className="ti ti-circle-check" aria-hidden="true" /> Code sent
-                to {countryCode} {phoneNumber}
-              </p>
-              <div className="signup__field">
-                <i
-                  className="ti ti-message-2-code signup__field-icon"
-                  aria-hidden="true"
-                />
-                <input
-                  id="otp"
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder="Enter 6-digit code"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ""))}
-                />
-              </div>
+          {error && (
+            <div className="login__error">
+              <i className="ti ti-alert-circle" aria-hidden="true" />
+              {error}
             </div>
           )}
 
-          <label className="signup__label" htmlFor="password">
+          <label className="login__label" htmlFor="phone">
+            Phone number
+          </label>
+          <div className="login__field">
+            <i className="ti ti-phone login__field-icon" aria-hidden="true" />
+            <input
+              id="phone"
+              type="tel"
+              inputMode="numeric"
+              maxLength={10}
+              placeholder="Enter your phone number"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ""))}
+              autoComplete="tel"
+            />
+          </div>
+
+          <label className="login__label" htmlFor="password">
             Password
           </label>
-          <div className="signup__field">
-            <i className="ti ti-lock signup__field-icon" aria-hidden="true" />
+          <div className="login__field">
+            <i className="ti ti-lock login__field-icon" aria-hidden="true" />
             <input
               id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="Create a password"
+              placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete="new-password"
+              autoComplete="current-password"
             />
             <button
               type="button"
-              className="signup__toggle"
+              className="login__toggle"
               onClick={() => setShowPassword((s) => !s)}
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
@@ -202,31 +129,34 @@ const SignUp = () => {
             </button>
           </div>
 
-          <button type="submit" className="signup__submit">
-            Create account
-            <i className="ti ti-arrow-right" aria-hidden="true" />
+          <button type="submit" className="login__submit" disabled={loading}>
+            {loading ? (
+              <span className="login__spinner" />
+            ) : (
+              <>
+                Sign in
+                <i className="ti ti-arrow-right" aria-hidden="true" />
+              </>
+            )}
           </button>
 
-          <div className="signup__divider">
+          <div className="login__divider">
             <span>or continue with</span>
           </div>
 
-          <div className="signup__social">
-            <button type="button" className="signup__social-btn">
+          <div className="login__social">
+            <button type="button" className="login__social-btn">
               <i className="ti ti-brand-google" aria-hidden="true" />
               Google
             </button>
-            <button type="button" className="signup__social-btn">
+            <button type="button" className="login__social-btn">
               <i className="ti ti-brand-microsoft" aria-hidden="true" />
               Microsoft
             </button>
           </div>
 
-          <p className="signup__footer">
-            Already have an account?{" "}
-            <a href="#login" className="signup__footer-link">
-              Sign in
-            </a>
+          <p className="login__footer">
+            Don&apos;t have an account? Ask your manager to create one for you.
           </p>
         </form>
       </main>
@@ -234,4 +164,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default Login;

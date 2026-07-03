@@ -1,9 +1,11 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/Auth/Login/Login";
-import SignUp from "../pages/Auth/SignUp/SignUp";
+import ChangePassword from "../pages/Auth/ChangePassword/ChangePassword";
+import CreateEmployee from "../pages/Admin/CreateEmployee/CreateEmployee";
+import Employees from "../pages/Admin/Employees/Employees";
 import ManagerDashboard from "../pages/Admin/ManagerDashboard/ManagerDashboard";
 import EmployeeDashboard from "../pages/Admin/EmployeeDashobard/EmployeeDashboard";
-import PunchAttendance from "../components/attendance/PunchAttendance/PunchAttendance";
+import PunchAttendance from "../pages/Employee/PunchAttendance/PunchAttendance";
 import PresentToday from "../components/dashboard/PresentToday/PresentToday";
 import AbsentToday from "../components/dashboard/AbsentToday/AbsentToday";
 import AcceptedLeaves from "../components/dashboard/AcceptedLeaves/AcceptedLeaves";
@@ -15,11 +17,12 @@ import LeaveApplicationButton from "../components/dashboard/LeaveApplicationButt
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<div>Welcome to the Attendance Management System</div>} />
+      <Route path="/" element={<Navigate to="/Login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/Login" element={<Login />} />
-      <Route path="/signup" element={<SignUp />} />
-      <Route path="/SignUp" element={<SignUp />} />
+      <Route path="/ChangePassword" element={<ChangePassword />} />
+      <Route path="/CreateEmployee" element={<CreateEmployee />} />
+      <Route path="/Employees" element={<Employees />} />
       <Route path="/managerdashboard" element={<ManagerDashboard />} />
       <Route path="/ManagerDashboard" element={<ManagerDashboard />} />
       <Route path="/EmployeeDashboard" element={<EmployeeDashboard />} />
