@@ -132,7 +132,7 @@ const RegularizeModal = ({ rec, onClose, onUpdated }) => {
 
         <div className="ar__reg-current">
           Current status:{" "}
-          <span className={`status-badge ${rec.status}`}>
+          <span className={`ar__status-badge ${rec.status}`}>
             {rec.status === "present" ? "Present" : rec.status === "half-day" ? "Half Day" : "Absent"}
           </span>
           {rec.regularized && (
@@ -329,7 +329,7 @@ const AttendanceRecords = () => {
                       <td>{fmtTime(rec.punchOut)}</td>
                       <td>{fmtMins(rec.totalMinutes)}</td>
                       <td className="ar__status-cell">
-                        <span className={`status-badge ${rec.status}`}>
+                        <span className={`ar__status-badge ${rec.status}`}>
                           {rec.status === "present" ? "Present" : rec.status === "half-day" ? "Half Day" : "Absent"}
                         </span>
                         {rec.regularized && (
@@ -342,12 +342,14 @@ const AttendanceRecords = () => {
                         )}
                       </td>
                       <td className="ar__actions-cell">
-                        <button className="ar__loc-btn" onClick={() => setSelectedRec(rec)} title="View on map">
-                          <i className="ti ti-map-pin" />
-                        </button>
-                        <button className="ar__loc-btn" onClick={() => setRegularizingRec(rec)} title="Regularize attendance">
-                          <i className="ti ti-pencil" />
-                        </button>
+                        <div className="ar__actions-inner">
+                          <button className="ar__loc-btn" onClick={() => setSelectedRec(rec)} title="View on map">
+                            <i className="ti ti-map-pin" />
+                          </button>
+                          <button className="ar__loc-btn" onClick={() => setRegularizingRec(rec)} title="Regularize attendance">
+                            <i className="ti ti-pencil" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
