@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import HomeButton from "../../HomeButton/HomeButton";
 import "./PresentToday.css";
 
 const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api`;
@@ -51,6 +52,7 @@ const PresentToday = () => {
 
   return (
     <div className="present">
+      <HomeButton />
       <div className="present__card">
         <div className="present__head">
           <div>

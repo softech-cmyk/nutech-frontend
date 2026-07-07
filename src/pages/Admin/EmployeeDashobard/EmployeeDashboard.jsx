@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import HomeButton from "../../../components/HomeButton/HomeButton";
 import "./EmployeeDashboard.css";
-import logo from "../../../assets/Nutech-removebg-preview.png";
 
 const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api`;
 
@@ -17,11 +17,26 @@ const fmtTime = (iso) => {
   return new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 };
 
-const timeToPercent = (iso) => {
+// "HH:mm" -> minutes since midnight
+const shiftMinutes = (hhmm, fallback) => {
+  const [h, m] = (hhmm || fallback).split(":").map(Number);
+  return h * 60 + m;
+};
+
+// "HH:mm" -> "10:00 AM"
+const fmtShiftTime = (hhmm) => {
+  if (!hhmm) return "--:--";
+  const [h, m] = hhmm.split(":").map(Number);
+  const period = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2, "0")} ${period}`;
+};
+
+const timeToPercent = (iso, shiftStart, shiftEnd) => {
   const d = new Date(iso);
   const mins  = d.getHours() * 60 + d.getMinutes();
-  const start = 10 * 60;       // 10:00 AM
-  const end   = 18 * 60 + 30;  // 6:30 PM
+  const start = shiftMinutes(shiftStart, "10:00");
+  const end   = shiftMinutes(shiftEnd, "18:30");
   return Math.max(0, Math.min(100, ((mins - start) / (end - start)) * 100));
 };
 
@@ -39,6 +54,7 @@ const EmployeeDashboard = () => {
   const [user, setUser]             = useState(null);
   const [manager, setManager]       = useState(null);
   const [todayAtt, setTodayAtt]     = useState(null);
+  const [latestLeave, setLatestLeave] = useState(null);
   const today = new Date();
 
   useEffect(() => {
@@ -74,6 +90,14 @@ const EmployeeDashboard = () => {
       .then((r) => r.json())
       .then((d) => setTodayAtt(d.attendance || null))
       .catch(() => {});
+
+    // fetch this employee's most recent leave request
+    fetch(`${API}/leaves/my`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((d) => setLatestLeave((d.leaves || [])[0] || null))
+      .catch(() => {});
   }, [navigate]);
 
   const initials = (name, phone) => {
@@ -89,6 +113,7 @@ const EmployeeDashboard = () => {
 
   return (
     <div className="ed">
+      <HomeButton />
       {/* ── Mobile overlay ── */}
       {sidebarOpen && (
         <div className="ed__drawer-overlay" onClick={() => setSidebarOpen(false)} />
@@ -99,10 +124,6 @@ const EmployeeDashboard = () => {
         <button className="ed__sidebar-close" onClick={() => setSidebarOpen(false)}>
           <i className="ti ti-x" />
         </button>
-
-        <div className="ed__sidebar-logo">
-          <img src={logo} alt="Nutech" />
-        </div>
 
         <nav className="ed__nav">
           {navItems.map((item) => (
@@ -195,6 +216,31 @@ const EmployeeDashboard = () => {
               <p className="ed__dept-sub">Your assigned department</p>
             </div>
 
+            {/* Leave status card */}
+            <div className="ed__card ed__card--leave">
+              <div className="ed__card-label">
+                <i className="ti ti-calendar-event" /> Leave Status
+              </div>
+              {latestLeave ? (
+                <>
+                  <span className={`ed__leave-status ed__leave-status--${latestLeave.status}`}>
+                    {latestLeave.status.charAt(0).toUpperCase() + latestLeave.status.slice(1)}
+                  </span>
+                  <p className="ed__leave-meta">
+                    {latestLeave.leaveType} &middot; {latestLeave.leaveDate}
+                  </p>
+                  {latestLeave.status === "rejected" && (
+                    <div className="ed__leave-reason">
+                      <i className="ti ti-message-circle" />
+                      {latestLeave.rejectionReason || "No reason provided by the manager."}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="ed__card-none">No leave requests yet</p>
+              )}
+            </div>
+
           </div>
 
 
@@ -204,7 +250,7 @@ const EmployeeDashboard = () => {
               <span className="ed__section-title">
                 <i className="ti ti-clock" /> Today's Schedule
               </span>
-              <span className="ed__schedule-time">10:00 AM – 6:30 PM</span>
+              <span className="ed__schedule-time">{fmtShiftTime(user?.shiftStart)} – {fmtShiftTime(user?.shiftEnd)}</span>
             </div>
 
             <div className="ed__today-row">
@@ -225,16 +271,16 @@ const EmployeeDashboard = () => {
               {/* Timeline */}
               <div className="ed__timeline">
                 <div className="ed__tl-ends">
-                  <span>10:00 AM</span>
+                  <span>{fmtShiftTime(user?.shiftStart)}</span>
                   <span>Office Hours</span>
-                  <span>6:30 PM</span>
+                  <span>{fmtShiftTime(user?.shiftEnd)}</span>
                 </div>
 
                 <div className="ed__tl-track">
                   <div className="ed__tl-fill" />
 
                   {todayAtt?.punchIn && (
-                    <div className="ed__tl-point" style={{ left: `${timeToPercent(todayAtt.punchIn)}%` }}>
+                    <div className="ed__tl-point" style={{ left: `${timeToPercent(todayAtt.punchIn, user?.shiftStart, user?.shiftEnd)}%` }}>
                       <div className="ed__tl-dot ed__tl-dot--in" />
                       <span className="ed__tl-point-label">
                         {fmtTime(todayAtt.punchIn)}<br />In
@@ -243,7 +289,7 @@ const EmployeeDashboard = () => {
                   )}
 
                   {todayAtt?.punchOut && (
-                    <div className="ed__tl-point" style={{ left: `${timeToPercent(todayAtt.punchOut)}%` }}>
+                    <div className="ed__tl-point" style={{ left: `${timeToPercent(todayAtt.punchOut, user?.shiftStart, user?.shiftEnd)}%` }}>
                       <div className="ed__tl-dot ed__tl-dot--out" />
                       <span className="ed__tl-point-label">
                         {fmtTime(todayAtt.punchOut)}<br />Out

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaTimesCircle } from "react-icons/fa";
+import HomeButton from "../../HomeButton/HomeButton";
 import "./RejectedLeaves.css";
 
 const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api`;
@@ -35,6 +36,7 @@ const RejectedLeaves = () => {
 
   return (
     <div className="rejected-leaves">
+      <HomeButton />
       <div className="rejected-card">
         <div className="header-section">
           <div>

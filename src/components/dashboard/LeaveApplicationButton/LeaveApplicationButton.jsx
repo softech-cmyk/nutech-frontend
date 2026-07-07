@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FaCalendar, FaPaperPlane } from "react-icons/fa";
+import HomeButton from "../../HomeButton/HomeButton";
 import "./LeaveApplicationButton.css";
 
 const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api`;
+const CL_ANNUAL_QUOTA = 12;
 
 const LeaveApplicationButton = () => {
   const [reason, setReason]         = useState("");
@@ -11,11 +13,39 @@ const LeaveApplicationButton = () => {
   const [submitted, setSubmitted]   = useState(false);
   const [leaveType, setLeaveType]   = useState("CL");
   const [error, setError]           = useState("");
+  const [clUsed, setClUsed]         = useState(0);
 
   const leaveTypes = ["CL", "SL", "EL", "PWL"];
+  const clQuotaReached = clUsed >= CL_ANNUAL_QUOTA;
+
+  const fetchClUsage = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    const year  = new Date().getFullYear();
+    try {
+      const res  = await fetch(`${API}/leaves/my`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      const used = (data.leaves || []).filter(
+        (l) => l.leaveType === "CL" && l.status !== "rejected" && l.leaveDate?.startsWith(String(year))
+      ).length;
+      setClUsed(used);
+      setLeaveType((prev) => (prev === "CL" && used >= CL_ANNUAL_QUOTA ? "SL" : prev));
+    } catch {
+      // ignore — quota display is a convenience, not a hard gate
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchClUsage();
+  }, [fetchClUsage]);
 
   const handleSend = async () => {
     if (!reason.trim() || !leaveDate) { setError("Please fill in all fields."); return; }
+    if (leaveType === "CL" && clQuotaReached) {
+      setError(`You've used all ${CL_ANNUAL_QUOTA} Casual Leave (CL) days for this year.`);
+      return;
+    }
     setError("");
     const token = localStorage.getItem("token");
     try {
@@ -27,6 +57,7 @@ const LeaveApplicationButton = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       setSubmitted(true);
+      fetchClUsage();
       setTimeout(() => {
         setReason("");
         setLeaveDate(new Date().toISOString().split("T")[0]);
@@ -40,6 +71,7 @@ const LeaveApplicationButton = () => {
 
   return (
     <div className="leave-application">
+      <HomeButton />
       <div className="application-container">
         <div className="app-header">
           <h2>Apply for Leave</h2>
@@ -52,17 +84,26 @@ const LeaveApplicationButton = () => {
           <div className="form-group">
             <label className="form-label">Leave Type</label>
             <div className="leave-type-options">
-              {leaveTypes.map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  className={leaveType === type ? "leave-pill active" : "leave-pill"}
-                  onClick={() => setLeaveType(type)}
-                >
-                  {type}
-                </button>
-              ))}
+              {leaveTypes.map((type) => {
+                const disabled = type === "CL" && clQuotaReached;
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    className={leaveType === type ? "leave-pill active" : "leave-pill"}
+                    onClick={() => setLeaveType(type)}
+                    disabled={disabled}
+                    title={disabled ? `CL quota (${CL_ANNUAL_QUOTA}/year) used up` : undefined}
+                  >
+                    {type}
+                  </button>
+                );
+              })}
             </div>
+            <p className={`leave-cl-quota ${clQuotaReached ? "leave-cl-quota--full" : ""}`}>
+              CL used this year: {clUsed}/{CL_ANNUAL_QUOTA}
+              {clQuotaReached && " — quota reached"}
+            </p>
           </div>
 
           {/* Reason */}

@@ -83,6 +83,18 @@
   min-width: 0;
 }
 
+.cemp__toggle {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 19px;
+  color: var(--nt-muted);
+  display: flex;
+  align-items: center;
+}
+.cemp__toggle:hover { color: var(--nt-green-dark); }
+
 .cemp__select {
   flex: 1;
   border: none;
@@ -115,6 +127,37 @@
   background: linear-gradient(135deg, var(--nt-green-dark), var(--nt-green-mid));
   color: #fff;
 }
+
+.cemp__shift-row { display: flex; align-items: center; gap: 10px; }
+.cemp__field--shift { flex: 1; }
+.cemp__field--shift input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 1rem;
+  color: var(--nt-ink);
+  width: 100%;
+}
+.cemp__shift-sep { color: var(--nt-muted); font-weight: 600; flex-shrink: 0; }
+
+.cemp__shift-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -0.6rem 0 1.3rem;
+}
+.cemp__preset-btn {
+  border: 1px solid #bbf7d0;
+  background: var(--nt-field-bg);
+  color: var(--nt-green-dark);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.cemp__preset-btn:hover { background: #dcfce7; border-color: var(--nt-green-mid); }
 
 .cemp__phone-row { display: flex; gap: 10px; }
 .cemp__field--phone { flex: 1; padding-left: 8px; }
@@ -199,12 +242,6 @@
   font-size: 0.95rem;
 }
 .cemp__result-row span { color: var(--nt-muted); }
-.cemp__temp-pass {
-  font-family: "Courier New", monospace;
-  font-size: 1.1rem;
-  letter-spacing: 1px;
-  color: var(--nt-green-deep);
-}
 
 @media (max-width: 480px) {
   .cemp__card { padding: 1.75rem; }

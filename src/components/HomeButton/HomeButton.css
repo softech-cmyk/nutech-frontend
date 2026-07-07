@@ -1,0 +1,28 @@
+.home-btn {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #15803d 0%, #0369a1 100%);
+  color: #fff;
+  font-size: 1.05rem;
+  box-shadow: 0 8px 20px rgba(15, 107, 93, 0.28);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.home-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(15, 107, 93, 0.36);
+}
+
+.home-btn:active {
+  transform: translateY(0);
+}

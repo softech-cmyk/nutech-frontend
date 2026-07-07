@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import TractorLoader from "../../../components/TractorLoader/TractorLoader";
+import HomeButton from "../../../components/HomeButton/HomeButton";
 import "./Employees.css";
 
 const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api`;
@@ -24,6 +26,12 @@ const Employees = () => {
   const [search, setSearch] = useState("");
   const [department, setDepartment] = useState("All");
   const [role, setRole] = useState("All");
+  const [resetTarget, setResetTarget] = useState(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [resetError, setResetError] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -71,8 +79,47 @@ const Employees = () => {
     departments: new Set(users.map((u) => u.department).filter(Boolean)).size,
   }), [users]);
 
+  const openResetModal = (user) => {
+    setResetTarget(user);
+    setNewPassword("");
+    setConfirmPassword("");
+    setShowPassword(false);
+    setResetError("");
+  };
+
+  const closeResetModal = () => {
+    setResetTarget(null);
+    setNewPassword("");
+    setConfirmPassword("");
+    setResetError("");
+  };
+
+  const handleResetPassword = async () => {
+    if (newPassword.length < 6) { setResetError("Password must be at least 6 characters."); return; }
+    if (newPassword !== confirmPassword) { setResetError("Passwords do not match."); return; }
+    setResetError("");
+    setResetting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/users/${resetTarget._id}/reset-password`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      toast.success(`Password reset for ${resetTarget.name || resetTarget.phone}.`);
+      closeResetModal();
+    } catch (err) {
+      setResetError(err.message || "Could not reset password.");
+    } finally {
+      setResetting(false);
+    }
+  };
+
   return (
     <div className="emps">
+      <HomeButton />
       <header className="emps__header">
         <div>
           <h1>Company employees</h1>
@@ -93,7 +140,7 @@ const Employees = () => {
             <div className="emps__stat-icon emps__stat-icon--total"><i className="ti ti-users" aria-hidden="true" /></div>
             <div>
               <p className="emps__stat-value">{stats.total}</p>
-              <p className="emps__stat-label">Total accounts</p>
+              <p className="emps__stat-label">No. of users</p>
             </div>
           </button>
           <button
@@ -180,6 +227,7 @@ const Employees = () => {
                 <th>Company</th>
                 <th>Role</th>
                 <th>Joined</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -198,10 +246,67 @@ const Employees = () => {
                     <span className={`emps__badge emps__badge--${u.role}`}>{u.role}</span>
                   </td>
                   <td>{u.createdAt ? formatDate(u.createdAt) : "—"}</td>
+                  <td>
+                    <button className="emps__reset-btn" onClick={() => openResetModal(u)}>
+                      <i className="ti ti-key" aria-hidden="true" /> Reset password
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {resetTarget && (
+        <div className="emps__modal-backdrop" onClick={closeResetModal}>
+          <div className="emps__modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="emps__modal-icon">
+              <i className="ti ti-key" aria-hidden="true" />
+            </div>
+            <h3 className="emps__modal-title">Reset password</h3>
+            <p className="emps__modal-sub">
+              Set a new password for <strong>{resetTarget.name || resetTarget.phone}</strong>.
+            </p>
+
+            <div className="emps__modal-field">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="New password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className="emps__modal-toggle"
+                onClick={() => setShowPassword((s) => !s)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                <i className={`ti ${showPassword ? "ti-eye-off" : "ti-eye"}`} />
+              </button>
+            </div>
+            <div className="emps__modal-field">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+            </div>
+
+            {resetError && <p className="emps__modal-error">{resetError}</p>}
+
+            <div className="emps__modal-actions">
+              <button className="emps__modal-cancel" onClick={closeResetModal} disabled={resetting}>
+                Cancel
+              </button>
+              <button className="emps__modal-confirm" onClick={handleResetPassword} disabled={resetting}>
+                {resetting ? "Resetting…" : "Reset password"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

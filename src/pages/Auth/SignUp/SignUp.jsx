@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./SignUp.css";
-import logo from "../../../assets/Nutech-removebg-preview.png";
 
 const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/auth`;
 
@@ -17,7 +16,6 @@ const DEPARTMENTS = [
 const COMPANIES = [
   "Nutech International",
   "SPL Technologies",
-  "Both",
 ];
 
 const countries = [
@@ -97,9 +95,6 @@ const SignUp = () => {
       <aside className="signup__brand">
         <div className="signup__brand-blob signup__brand-blob--green" />
         <div className="signup__brand-blob signup__brand-blob--purple" />
-        <div className="signup__brand-logo">
-          <img src={logo} alt="Nutech International" />
-        </div>
         <div className="signup__brand-copy">
           <span className="signup__brand-rule" />
           <h2>Join the Nutech research hub</h2>
@@ -276,17 +271,6 @@ const SignUp = () => {
           <button type="submit" className="signup__submit">
             Create account <i className="ti ti-arrow-right" aria-hidden="true" />
           </button>
-
-          <div className="signup__divider"><span>or continue with</span></div>
-
-          <div className="signup__social">
-            <button type="button" className="signup__social-btn">
-              <i className="ti ti-brand-google" aria-hidden="true" /> Google
-            </button>
-            <button type="button" className="signup__social-btn">
-              <i className="ti ti-brand-microsoft" aria-hidden="true" /> Microsoft
-            </button>
-          </div>
 
           <p className="signup__footer">
             Already have an account?{" "}

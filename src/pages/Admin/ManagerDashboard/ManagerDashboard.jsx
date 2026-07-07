@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import TractorLoader from "../../../components/TractorLoader/TractorLoader";
+import HomeButton from "../../../components/HomeButton/HomeButton";
 import "./ManagerDashboard.css";
-import logo from "../../../assets/Nutech-removebg-preview.png";
 import {
   FaCheckCircle,
   FaTimesCircle,
@@ -157,6 +157,7 @@ const ManagerDashboard = () => {
 
   return (
     <div className="mgr">
+      <HomeButton />
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="mgr__overlay" onClick={() => setSidebarOpen(false)} />
@@ -167,10 +168,6 @@ const ManagerDashboard = () => {
         <button className="mgr__sidebar-close" onClick={() => setSidebarOpen(false)}>
           <i className="ti ti-x" />
         </button>
-
-        <div className="mgr__sidebar-logo">
-          <img src={logo} alt="Nutech International" />
-        </div>
 
         <nav className="mgr__nav">
           {navItems.map((item) => (

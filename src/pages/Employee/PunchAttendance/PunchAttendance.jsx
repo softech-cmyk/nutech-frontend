@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleMap, useLoadScript, Marker, InfoWindow } from "@react-google-maps/api";
-import logo from "../../../assets/Nutech-removebg-preview.png";
 import "./PunchAttendance.css";
 
 const employeeNav = [
@@ -212,9 +211,6 @@ const PunchAttendance = () => {
         <button className="pa__sidebar-close" onClick={() => setSidebarOpen(false)}>
           <i className="ti ti-x" />
         </button>
-        <div className="pa__sidebar-logo">
-          <img src={logo} alt="Nutech" />
-        </div>
         <nav className="pa__nav">
           {navItems.map((item) => (
             <button

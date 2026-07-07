@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
-import logo from "../../../assets/Nutech-removebg-preview.png";
 
 const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/auth`;
 
@@ -54,13 +53,9 @@ const Login = () => {
         <div className="login__brand-blob login__brand-blob--green" />
         <div className="login__brand-blob login__brand-blob--purple" />
 
-        <div className="login__brand-logo">
-          <img src={logo} alt="Nutech International" />
-        </div>
-
         <div className="login__brand-copy">
           <span className="login__brand-rule" />
-          <h2>Join the Nutech research hub</h2>
+          <h2>Nu tech international</h2>
           <p className="login__tagline">Partnering AgEv Research Since 1992</p>
         </div>
 
@@ -139,21 +134,6 @@ const Login = () => {
               </>
             )}
           </button>
-
-          <div className="login__divider">
-            <span>or continue with</span>
-          </div>
-
-          <div className="login__social">
-            <button type="button" className="login__social-btn">
-              <i className="ti ti-brand-google" aria-hidden="true" />
-              Google
-            </button>
-            <button type="button" className="login__social-btn">
-              <i className="ti ti-brand-microsoft" aria-hidden="true" />
-              Microsoft
-            </button>
-          </div>
 
           <p className="login__footer">
             Don&apos;t have an account? Ask your manager to create one for you.
