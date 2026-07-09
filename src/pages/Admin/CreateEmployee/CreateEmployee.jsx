@@ -45,6 +45,7 @@ const CreateEmployee = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [shiftStart, setShiftStart] = useState("10:00");
   const [shiftEnd, setShiftEnd] = useState("18:30");
   const [error, setError] = useState("");
@@ -68,6 +69,7 @@ const CreateEmployee = () => {
     setPassword("");
     setConfirmPassword("");
     setShowPassword(false);
+    setShowConfirmPassword(false);
     setShiftStart("10:00");
     setShiftEnd("18:30");
     setResult(null);
@@ -270,13 +272,21 @@ const CreateEmployee = () => {
             <i className="ti ti-lock cemp__field-icon" aria-hidden="true" />
             <input
               id="confirmPassword"
-              type={showPassword ? "text" : "password"}
+              type={showConfirmPassword ? "text" : "password"}
               placeholder="Re-enter the password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               autoComplete="new-password"
               required
             />
+            <button
+              type="button"
+              className="cemp__toggle"
+              onClick={() => setShowConfirmPassword((s) => !s)}
+              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+            >
+              <i className={`ti ${showConfirmPassword ? "ti-eye-off" : "ti-eye"}`} />
+            </button>
           </div>
 
           <button type="submit" className="cemp__submit" disabled={loading}>

@@ -11,6 +11,9 @@ const ChangePassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem("token")) navigate("/Login");
@@ -65,36 +68,60 @@ const ChangePassword = () => {
           <div className="chpass__field">
             <input
               id="current"
-              type="password"
+              type={showCurrent ? "text" : "password"}
               placeholder="Enter the temp password you were given"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               autoComplete="current-password"
             />
+            <button
+              type="button"
+              className="chpass__toggle"
+              onClick={() => setShowCurrent((s) => !s)}
+              aria-label={showCurrent ? "Hide password" : "Show password"}
+            >
+              <i className={`ti ${showCurrent ? "ti-eye-off" : "ti-eye"}`} />
+            </button>
           </div>
 
           <label className="chpass__label" htmlFor="new">New password</label>
           <div className="chpass__field">
             <input
               id="new"
-              type="password"
+              type={showNew ? "text" : "password"}
               placeholder="Create a new password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               autoComplete="new-password"
             />
+            <button
+              type="button"
+              className="chpass__toggle"
+              onClick={() => setShowNew((s) => !s)}
+              aria-label={showNew ? "Hide password" : "Show password"}
+            >
+              <i className={`ti ${showNew ? "ti-eye-off" : "ti-eye"}`} />
+            </button>
           </div>
 
           <label className="chpass__label" htmlFor="confirm">Confirm new password</label>
           <div className="chpass__field">
             <input
               id="confirm"
-              type="password"
+              type={showConfirm ? "text" : "password"}
               placeholder="Re-enter new password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               autoComplete="new-password"
             />
+            <button
+              type="button"
+              className="chpass__toggle"
+              onClick={() => setShowConfirm((s) => !s)}
+              aria-label={showConfirm ? "Hide password" : "Show password"}
+            >
+              <i className={`ti ${showConfirm ? "ti-eye-off" : "ti-eye"}`} />
+            </button>
           </div>
 
           <button type="submit" className="chpass__submit" disabled={loading}>
