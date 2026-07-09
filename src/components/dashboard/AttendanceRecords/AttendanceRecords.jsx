@@ -542,9 +542,11 @@ const AttendanceRecords = () => {
   }, [filterType, startDate, endDate, activeMonth, activeYear, navigate]);
 
   useEffect(() => {
-    fetchRecords();
+    // Deferred via setTimeout rather than called directly, so the effect
+    // itself never synchronously invokes a function that sets state.
+    const initialFetch = setTimeout(fetchRecords, 0);
     const interval = setInterval(fetchRecords, 30000);
-    return () => clearInterval(interval);
+    return () => { clearTimeout(initialFetch); clearInterval(interval); };
   }, [fetchRecords]);
 
   return (
