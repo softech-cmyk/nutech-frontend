@@ -83,6 +83,10 @@
   min-width: 0;
 }
 
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
 .cemp__toggle {
   flex-shrink: 0;
   border: none;

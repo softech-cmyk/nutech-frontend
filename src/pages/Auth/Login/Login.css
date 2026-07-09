@@ -218,6 +218,10 @@
   font-weight: 400;
   font-style: italic;
 }
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
 .login__toggle {
   border: none;
   background: transparent;
