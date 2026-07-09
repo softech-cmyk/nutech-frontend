@@ -8,6 +8,7 @@ const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api`;
 const AbsentToday = () => {
   const navigate          = useNavigate();
   const [absent, setAbsent]   = useState([]);
+  const [holiday, setHoliday] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const today = new Date().toLocaleDateString("en-US", {
@@ -22,13 +23,17 @@ const AbsentToday = () => {
     try {
       const todayStr = new Date().toISOString().slice(0, 10);
 
-      const [usersRes, attRes] = await Promise.all([
+      const [usersRes, attRes, holidayRes] = await Promise.all([
         fetch(`${API}/users/all`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API}/attendance/all?date=${todayStr}`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API}/holidays/today`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
-      const usersData = await usersRes.json();
-      const attData   = await attRes.json();
+      const usersData   = await usersRes.json();
+      const attData     = await attRes.json();
+      const holidayData = await holidayRes.json();
+
+      setHoliday(holidayData.holiday || null);
 
       const presentIds = new Set(
         (attData.records || []).map((r) => r.userId?._id || r.userId)
@@ -67,15 +72,21 @@ const AbsentToday = () => {
             <p className="table-sub">{today}</p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <span className="absent__count">{absent.length} absent</span>
+            <span className="absent__count">{holiday ? 0 : absent.length} absent</span>
             <button className="absent__refresh" onClick={fetchAbsent}>
               <i className="ti ti-refresh" /> Refresh
             </button>
           </div>
         </div>
 
+        {holiday && (
+          <p className="absent__empty" style={{ padding: "0 0 1rem" }}>
+            <i className="ti ti-calendar-star" /> Today is a holiday — {holiday.name}. No one is marked absent.
+          </p>
+        )}
+
         <div className="present-table-wrap">
-          {loading ? (
+          {holiday ? null : loading ? (
             <p className="absent__empty">Loading...</p>
           ) : absent.length === 0 ? (
             <p className="absent__empty">Everyone has punched in today!</p>

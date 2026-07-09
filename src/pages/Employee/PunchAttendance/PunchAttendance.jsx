@@ -8,6 +8,7 @@ const employeeNav = [
   { id: "punch",      label: "Punch Attendance", icon: "ti-fingerprint",      path: "/PunchAttendance"        },
   { id: "attendance", label: "My Attendance",    icon: "ti-calendar-check",   path: "/AttendanceRecords"      },
   { id: "leave",      label: "Apply Leave",      icon: "ti-calendar-plus",    path: "/LeaveApplicationButton" },
+  { id: "holidays",   label: "Holidays",         icon: "ti-calendar-star",    path: "/Holidays"                },
 ];
 
 const managerNav = [
@@ -16,12 +17,14 @@ const managerNav = [
   { id: "present",    label: "Present Today",      icon: "ti-user-check",       path: "/PresentToday"       },
   { id: "absent",     label: "Absent Today",       icon: "ti-user-x",           path: "/AbsentToday"        },
   { id: "leaves",     label: "Applied Leaves",     icon: "ti-calendar-event",   path: "/LeavesApplied"      },
-  { id: "onleaves",   label: "On Leaves",          icon: "ti-calendar-check",   path: "/AcceptedLeaves"     },
+  { id: "onleaves",   label: "Leave Reports",      icon: "ti-calendar-check",   path: "/AcceptedLeaves"     },
   { id: "records",    label: "Attendance Records", icon: "ti-history",          path: "/AttendanceRecords"  },
   { id: "rejected",   label: "Rejected Leaves",    icon: "ti-calendar-x",       path: "/RejectedLeaves"     },
+  { id: "holidays",   label: "Holidays",           icon: "ti-calendar-star",    path: "/Holidays"           },
 ];
 
-const API      = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/attendance`;
+const API_BASE = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api`;
+const API      = `${API_BASE}/attendance`;
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const MAP_STYLE = { width: "100%", height: "260px", borderRadius: "16px" };
@@ -57,20 +60,22 @@ const PunchAttendance = () => {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [time, setTime]               = useState(new Date());
-  const [punchIn, setPunchIn]         = useState(null);
-  const [punchOut, setPunchOut]       = useState(null);
-  const [punchInLoc, setPunchInLoc]         = useState(null);
-  const [punchOutLoc, setPunchOutLoc]       = useState(null);
-  const [punchInAddress, setPunchInAddress] = useState(null);
-  const [punchOutAddress, setPunchOutAddress] = useState(null);
+  const [sessions, setSessions]       = useState([]); // today's punch in/out cycles
+  const [totalMinutes, setTotalMinutes] = useState(null);
   const [livePos, setLivePos]               = useState(null);
-  const [status, setStatus]           = useState("not-started");
   const [dayStatus, setDayStatus]     = useState(null); // "present" | "half-day"
   const [lateNotice, setLateNotice]   = useState(null);
   const [error, setError]             = useState("");
   const [loading, setLoading]         = useState(false);
   const [activeMarker, setActiveMarker] = useState(null);
+  const [holiday, setHoliday] = useState(null);
   const watchRef = useRef(null);
+
+  // Derived from sessions — an employee can punch in/out multiple times a
+  // day, so "status" is really just "is there an open session right now".
+  const lastSession = sessions[sessions.length - 1] || null;
+  const openSession  = !!(lastSession && !lastSession.punchOut);
+  const status = sessions.length === 0 ? "not-started" : openSession ? "on-duty" : "off-duty";
 
   const { isLoaded } = useLoadScript({ googleMapsApiKey: MAPS_KEY });
 
@@ -88,14 +93,8 @@ const PunchAttendance = () => {
       .then((r) => r.json())
       .then(({ attendance }) => {
         if (!attendance) return;
-        if (attendance.punchIn)  setPunchIn(new Date(attendance.punchIn));
-        if (attendance.punchOut) setPunchOut(new Date(attendance.punchOut));
-        if (attendance.punchInLocation?.lat)  setPunchInLoc(attendance.punchInLocation);
-        if (attendance.punchOutLocation?.lat) setPunchOutLoc(attendance.punchOutLocation);
-        if (attendance.punchInAddress)        setPunchInAddress(attendance.punchInAddress);
-        if (attendance.punchOutAddress)       setPunchOutAddress(attendance.punchOutAddress);
-        if (attendance.punchIn && !attendance.punchOut) setStatus("on-duty");
-        if (attendance.punchOut) setStatus("off-duty");
+        setSessions(attendance.sessions || []);
+        if (attendance.totalMinutes != null) setTotalMinutes(attendance.totalMinutes);
         if (attendance.status) setDayStatus(attendance.status);
         if (attendance.lateArrival) {
           setLateNotice(
@@ -105,6 +104,16 @@ const PunchAttendance = () => {
           );
         }
       })
+      .catch(() => {});
+  }, []);
+
+  // check whether today is a holiday
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    fetch(`${API_BASE}/holidays/today`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then(({ holiday }) => setHoliday(holiday || null))
       .catch(() => {});
   }, []);
 
@@ -123,12 +132,16 @@ const PunchAttendance = () => {
 
   const fmt = (d) =>
     d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  const fmtShort = (d) =>
-    d ? d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : "--:--";
+  const fmtShort = (iso) =>
+    iso ? new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : "--:--";
   const calcHours = () => {
-    if (!punchIn || !punchOut) return "—";
-    const ms = punchOut - punchIn;
-    return `${Math.floor(ms / 3600000)}h ${Math.floor((ms % 3600000) / 60000)}m`;
+    if (totalMinutes == null) return "—";
+    return `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`;
+  };
+  const sessionDuration = (s) => {
+    if (!s.punchOut) return "in progress";
+    const mins = Math.floor((new Date(s.punchOut) - new Date(s.punchIn)) / 60000);
+    return `${Math.floor(mins / 60)}h ${mins % 60}m`;
   };
 
   const handlePunch = async () => {
@@ -142,7 +155,7 @@ const PunchAttendance = () => {
       const address = loc ? await reverseGeocode(loc.lat, loc.lng) : null;
       const payload = { ...(loc || {}), ...(address ? { address } : {}) };
 
-      if (status === "not-started") {
+      if (!openSession) {
         const res  = await fetch(`${API}/punch-in`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -150,10 +163,7 @@ const PunchAttendance = () => {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message);
-        setPunchIn(new Date(data.attendance.punchIn));
-        if (loc)     setPunchInLoc(loc);
-        if (address) setPunchInAddress(address);
-        setStatus("on-duty");
+        setSessions(data.attendance.sessions || []);
         setDayStatus(data.attendance.status);
         if (data.attendance.lateArrival) {
           setLateNotice(
@@ -165,7 +175,7 @@ const PunchAttendance = () => {
           setLateNotice(null);
         }
 
-      } else if (status === "on-duty") {
+      } else {
         const res  = await fetch(`${API}/punch-out`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -173,10 +183,8 @@ const PunchAttendance = () => {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message);
-        setPunchOut(new Date(data.attendance.punchOut));
-        if (loc)     setPunchOutLoc(loc);
-        if (address) setPunchOutAddress(address);
-        setStatus("off-duty");
+        setSessions(data.attendance.sessions || []);
+        setTotalMinutes(data.attendance.totalMinutes);
         setDayStatus(data.attendance.status);
       }
     } catch (err) {
@@ -186,7 +194,10 @@ const PunchAttendance = () => {
     }
   };
 
-  const mapCenter = punchInLoc || livePos || { lat: 28.6139, lng: 77.2090 };
+  const hasLoc = (loc) => loc?.lat != null && loc?.lng != null;
+  const inLoc  = hasLoc(lastSession?.punchInLocation)  ? lastSession.punchInLocation  : null;
+  const outLoc = hasLoc(lastSession?.punchOutLocation) ? lastSession.punchOutLocation : null;
+  const mapCenter = inLoc || livePos || { lat: 28.6139, lng: 77.2090 };
 
   const today = time.toLocaleDateString("en-US", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
@@ -248,6 +259,12 @@ const PunchAttendance = () => {
           <p className="pa__date">{today}</p>
         </div>
 
+        {holiday && (
+          <p className="pa__notice">
+            <i className="ti ti-calendar-star" /> Today is a holiday — {holiday.name}. You don't need to punch in.
+          </p>
+        )}
+
         <div className="pa__clock">{fmt(time)}</div>
 
         <div className={`pa__badge pa__badge--${status}`}>
@@ -270,30 +287,30 @@ const PunchAttendance = () => {
 
         {error && <p className="pa__error">{error}</p>}
 
-        {status !== "off-duty" && (
-          <button
-            className={`pa__btn ${status === "on-duty" ? "pa__btn--out" : "pa__btn--in"}`}
-            onClick={handlePunch}
-            disabled={loading}
-          >
-            <i className={`ti ${status === "on-duty" ? "ti-logout" : "ti-login"}`} />
-            {loading ? "Please wait…" : status === "on-duty" ? "Punch Out" : "Punch In"}
-          </button>
-        )}
+        <button
+          className={`pa__btn ${openSession ? "pa__btn--out" : "pa__btn--in"}`}
+          onClick={handlePunch}
+          disabled={loading}
+        >
+          <i className={`ti ${openSession ? "ti-logout" : "ti-login"}`} />
+          {loading ? "Please wait…" : openSession ? "Punch Out" : sessions.length > 0 ? "Punch In Again" : "Punch In"}
+        </button>
 
         {status === "off-duty" && (
-          <p className="pa__done"><i className="ti ti-check" /> Attendance marked for today</p>
+          <p className="pa__done">
+            <i className="ti ti-check" /> Stepped out? You can punch in again any time today.
+          </p>
         )}
 
         <div className="pa__info">
           <div className="pa__info-box">
-            <span className="pa__info-label">Punch In</span>
-            <span className="pa__info-value">{fmtShort(punchIn)}</span>
+            <span className="pa__info-label">First Punch In</span>
+            <span className="pa__info-value">{fmtShort(sessions[0]?.punchIn)}</span>
           </div>
           <div className="pa__info-divider" />
           <div className="pa__info-box">
-            <span className="pa__info-label">Punch Out</span>
-            <span className="pa__info-value">{fmtShort(punchOut)}</span>
+            <span className="pa__info-label">Last Punch Out</span>
+            <span className="pa__info-value">{openSession ? "—" : fmtShort(lastSession?.punchOut)}</span>
           </div>
           <div className="pa__info-divider" />
           <div className="pa__info-box">
@@ -302,26 +319,41 @@ const PunchAttendance = () => {
           </div>
         </div>
 
+        {sessions.length > 0 && (
+          <div className="pa__sessions">
+            <p className="pa__sessions-title"><i className="ti ti-list-details" /> Today's sessions</p>
+            <ul className="pa__sessions-list">
+              {sessions.map((s, idx) => (
+                <li key={idx} className="pa__session-row">
+                  <span className="pa__session-num">{idx + 1}</span>
+                  <span>{fmtShort(s.punchIn)} → {s.punchOut ? fmtShort(s.punchOut) : "in progress"}</span>
+                  <span className="pa__session-dur">{sessionDuration(s)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Google Map */}
         <div className="pa__map-wrap">
           <p className="pa__map-label">
             <i className="ti ti-map-pin" />
             {status === "not-started" && "Location will appear after punch in"}
             {status === "on-duty"     && "Live Location — On Duty"}
-            {status === "off-duty"    && "Punch In & Out Locations"}
+            {status === "off-duty"    && "Latest Punch In & Out Locations"}
           </p>
 
           {/* Address pills */}
-          {(punchInAddress || punchOutAddress) && (
+          {(lastSession?.punchInAddress || lastSession?.punchOutAddress) && (
             <div className="pa__addresses">
-              {punchInAddress && (
+              {lastSession?.punchInAddress && (
                 <div className="pa__address pa__address--in">
-                  <i className="ti ti-map-pin" /> <strong>In:</strong> {punchInAddress}
+                  <i className="ti ti-map-pin" /> <strong>In:</strong> {lastSession.punchInAddress}
                 </div>
               )}
-              {punchOutAddress && (
+              {lastSession?.punchOutAddress && (
                 <div className="pa__address pa__address--out">
-                  <i className="ti ti-map-pin" /> <strong>Out:</strong> {punchOutAddress}
+                  <i className="ti ti-map-pin" /> <strong>Out:</strong> {lastSession.punchOutAddress}
                 </div>
               )}
             </div>
@@ -335,9 +367,9 @@ const PunchAttendance = () => {
               options={{ disableDefaultUI: false, zoomControl: true }}
             >
               {/* Punch In marker — green */}
-              {punchInLoc && (
+              {inLoc && (
                 <Marker
-                  position={punchInLoc}
+                  position={inLoc}
                   title="Punch In"
                   onClick={() => setActiveMarker("in")}
                   icon={{
@@ -347,7 +379,7 @@ const PunchAttendance = () => {
                   {activeMarker === "in" && (
                     <InfoWindow onCloseClick={() => setActiveMarker(null)}>
                       <div style={{ color: "#166534", fontWeight: 700 }}>
-                        Punch In<br />{fmtShort(punchIn)}
+                        Punch In<br />{fmtShort(lastSession.punchIn)}
                       </div>
                     </InfoWindow>
                   )}
@@ -355,9 +387,9 @@ const PunchAttendance = () => {
               )}
 
               {/* Punch Out marker — red */}
-              {punchOutLoc && (
+              {outLoc && (
                 <Marker
-                  position={punchOutLoc}
+                  position={outLoc}
                   title="Punch Out"
                   onClick={() => setActiveMarker("out")}
                   icon={{
@@ -367,7 +399,7 @@ const PunchAttendance = () => {
                   {activeMarker === "out" && (
                     <InfoWindow onCloseClick={() => setActiveMarker(null)}>
                       <div style={{ color: "#991b1b", fontWeight: 700 }}>
-                        Punch Out<br />{fmtShort(punchOut)}
+                        Punch Out<br />{fmtShort(lastSession.punchOut)}
                       </div>
                     </InfoWindow>
                   )}

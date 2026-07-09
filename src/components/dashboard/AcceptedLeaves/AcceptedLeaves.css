@@ -68,6 +68,93 @@
   color: #166534;
 }
 
+.al__reject-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  color: #fff;
+  white-space: nowrap;
+  background: linear-gradient(90deg, #ef4444, #b91c1c);
+  box-shadow: 0 8px 20px rgba(185, 28, 28, 0.24);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.al__reject-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(0, 0, 0, 0.14); }
+
+/* Move-to-rejected modal */
+.al__modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 16px;
+}
+.al__modal-card {
+  width: min(420px, 100%);
+  background: #fff;
+  border: 1px solid var(--nt-line);
+  border-radius: 20px;
+  box-shadow: 0 24px 60px rgba(21, 128, 61, 0.18);
+  padding: 24px;
+  text-align: center;
+}
+.al__modal-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+.al__modal-title { margin: 0 0 6px; font-size: 1.1rem; color: var(--nt-green-deep); }
+.al__modal-sub { margin: 0 0 14px; font-size: 0.88rem; color: #5b6b74; line-height: 1.4; }
+.al__modal-textarea {
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  box-sizing: border-box;
+}
+.al__modal-textarea:focus {
+  outline: none;
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+.al__modal-error { margin: 8px 0 0; font-size: 0.82rem; color: #b91c1c; text-align: left; }
+.al__modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+.al__modal-cancel,
+.al__modal-confirm {
+  border: none;
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.al__modal-cancel { background: rgba(0, 0, 0, 0.06); color: #333; }
+.al__modal-confirm { background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; }
+.al__modal-cancel:hover,
+.al__modal-confirm:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12); }
+.al__modal-cancel:disabled,
+.al__modal-confirm:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
 .accepted-leaves {
   min-height: 100vh;
   padding: 3rem;

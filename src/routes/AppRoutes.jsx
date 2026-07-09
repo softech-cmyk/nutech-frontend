@@ -13,6 +13,7 @@ import LeavesApplied from "../components/dashboard/LeavesApplied/LeavesApplied";
 import AttendanceRecords from "../components/dashboard/AttendanceRecords/AttendanceRecords";
 import RejectedLeaves from "../components/dashboard/RejectedLeaves/RejectedLeaves";
 import LeaveApplicationButton from "../components/dashboard/LeaveApplicationButton/LeaveApplicationButton";
+import Holidays from "../pages/Admin/Holidays/Holidays";
 
 function AppRoutes() {
   return (
@@ -34,6 +35,7 @@ function AppRoutes() {
       <Route path="/AttendanceRecords" element={<AttendanceRecords />} />
       <Route path="/RejectedLeaves" element={<RejectedLeaves />} />
       <Route path="/LeaveApplicationButton" element={<LeaveApplicationButton />} />
+      <Route path="/Holidays" element={<Holidays />} />
       <Route path="*" element={<div>Page not found</div>} />
     </Routes>
   );

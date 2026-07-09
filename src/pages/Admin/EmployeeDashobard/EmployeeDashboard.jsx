@@ -45,6 +45,7 @@ const navItems = [
   { id: "punch",      label: "Punch Attendance", icon: "ti-fingerprint",      path: "/PunchAttendance"         },
   { id: "attendance", label: "My Attendance",    icon: "ti-calendar-check",   path: "/AttendanceRecords"       },
   { id: "leave",      label: "Apply Leave",      icon: "ti-calendar-plus",    path: "/LeaveApplicationButton"  },
+  { id: "holidays",   label: "Holidays",         icon: "ti-calendar-star",    path: "/Holidays"                },
 ];
 
 const EmployeeDashboard = () => {

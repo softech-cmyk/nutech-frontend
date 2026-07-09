@@ -232,6 +232,25 @@ tbody tr:hover {
   box-shadow: 0 6px 16px rgba(185, 28, 28, 0.25);
 }
 
+.rl__approve-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  color: #fff;
+  white-space: nowrap;
+  background: linear-gradient(90deg, var(--nt-green-dark), var(--nt-green-mid));
+  box-shadow: 0 8px 20px rgba(21, 128, 61, 0.24);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.rl__approve-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(0, 0, 0, 0.14); }
+.rl__approve-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
 .leave-type {
   display: inline-flex;
   align-items: center;

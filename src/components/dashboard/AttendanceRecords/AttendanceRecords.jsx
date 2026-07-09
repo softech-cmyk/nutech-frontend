@@ -202,71 +202,141 @@ const exportSingleEmployeeSheet = async (group, fileName) => {
   await triggerDownload(workbook, fileName);
 };
 
-const LocationModal = ({ rec, onClose }) => {
+const LocationModal = ({ rec, onClose, onLogged }) => {
   const { isLoaded } = useLoadScript({ googleMapsApiKey: MAPS_KEY });
   const [activeMarker, setActiveMarker] = useState(null);
+  const [unlocked, setUnlocked] = useState(false);
+  const [reason, setReason]     = useState("");
+  const [error, setError]       = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [record, setRecord]     = useState(rec);
 
-  const inLoc  = rec.punchInLocation?.lat  ? rec.punchInLocation  : null;
-  const outLoc = rec.punchOutLocation?.lat ? rec.punchOutLocation : null;
+  const inLoc  = record.punchInLocation?.lat  ? record.punchInLocation  : null;
+  const outLoc = record.punchOutLocation?.lat ? record.punchOutLocation : null;
   const center = inLoc || outLoc || { lat: 28.6139, lng: 77.2090 };
+
+  const submitReason = async () => {
+    if (!reason.trim()) {
+      setError("Please state why you're viewing this location.");
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/attendance/${record._id}/view-location`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ reason: reason.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      setRecord(data.attendance);
+      onLogged(data.attendance);
+      setUnlocked(true);
+    } catch (err) {
+      setError(err.message || "Could not log this view.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="ar__modal-backdrop" onClick={onClose}>
       <div className="ar__modal" onClick={(e) => e.stopPropagation()}>
         <div className="ar__modal-header">
           <div>
-            <h3>{rec.userId?.name || rec.userId?.phone || "Employee"}</h3>
-            <p>{rec.date} &nbsp;·&nbsp; {fmtTime(rec.punchIn)} – {fmtTime(rec.punchOut)}</p>
+            <h3>{record.userId?.name || record.userId?.phone || "Employee"}</h3>
+            <p>{record.date} &nbsp;·&nbsp; {fmtTime(record.punchIn)} – {fmtTime(record.punchOut)}</p>
           </div>
           <button className="ar__modal-close" onClick={onClose}>
             <i className="ti ti-x" />
           </button>
         </div>
 
-        <div className="ar__modal-legend">
-          <span className="ar__legend ar__legend--in">● Punch In</span>
-          <span className="ar__legend ar__legend--out">● Punch Out</span>
-        </div>
-
-        {isLoaded ? (
-          <GoogleMap mapContainerStyle={MAP_STYLE} center={center} zoom={15}>
-            {inLoc && (
-              <Marker
-                position={inLoc}
-                onClick={() => setActiveMarker("in")}
-                icon={{ url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png" }}
-              >
-                {activeMarker === "in" && (
-                  <InfoWindow onCloseClick={() => setActiveMarker(null)}>
-                    <div style={{ fontWeight: 700, color: "#166534" }}>
-                      Punch In<br />{fmtTime(rec.punchIn)}
-                    </div>
-                  </InfoWindow>
-                )}
-              </Marker>
-            )}
-            {outLoc && (
-              <Marker
-                position={outLoc}
-                onClick={() => setActiveMarker("out")}
-                icon={{ url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png" }}
-              >
-                {activeMarker === "out" && (
-                  <InfoWindow onCloseClick={() => setActiveMarker(null)}>
-                    <div style={{ fontWeight: 700, color: "#991b1b" }}>
-                      Punch Out<br />{fmtTime(rec.punchOut)}
-                    </div>
-                  </InfoWindow>
-                )}
-              </Marker>
-            )}
-          </GoogleMap>
+        {!unlocked ? (
+          <div className="ar__loc-gate">
+            <p className="ar__loc-gate-intro">
+              <i className="ti ti-shield-lock" /> Location data is sensitive. State why you're viewing it — this is logged against the record.
+            </p>
+            <textarea
+              className="ar__reg-note"
+              rows={2}
+              placeholder="e.g. Verifying a field-visit claim for this date"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              autoFocus
+            />
+            {error && <p className="ar__reg-error"><i className="ti ti-alert-circle" /> {error}</p>}
+            <button className="ar__reg-btn ar__reg-btn--full" disabled={submitting} onClick={submitReason}>
+              <i className="ti ti-eye" /> {submitting ? "Logging…" : "View location"}
+            </button>
+          </div>
         ) : (
-          <div className="ar__map-loading">Loading map…</div>
-        )}
+          <>
+            <div className="ar__modal-legend">
+              <span className="ar__legend ar__legend--in">● Punch In</span>
+              <span className="ar__legend ar__legend--out">● Punch Out</span>
+            </div>
 
-        {!inLoc && !outLoc && (
-          <p className="ar__modal-no-loc">No location data recorded for this entry.</p>
+            {isLoaded ? (
+              <GoogleMap mapContainerStyle={MAP_STYLE} center={center} zoom={15}>
+                {inLoc && (
+                  <Marker
+                    position={inLoc}
+                    onClick={() => setActiveMarker("in")}
+                    icon={{ url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png" }}
+                  >
+                    {activeMarker === "in" && (
+                      <InfoWindow onCloseClick={() => setActiveMarker(null)}>
+                        <div style={{ fontWeight: 700, color: "#166534" }}>
+                          Punch In<br />{fmtTime(record.punchIn)}
+                        </div>
+                      </InfoWindow>
+                    )}
+                  </Marker>
+                )}
+                {outLoc && (
+                  <Marker
+                    position={outLoc}
+                    onClick={() => setActiveMarker("out")}
+                    icon={{ url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png" }}
+                  >
+                    {activeMarker === "out" && (
+                      <InfoWindow onCloseClick={() => setActiveMarker(null)}>
+                        <div style={{ fontWeight: 700, color: "#991b1b" }}>
+                          Punch Out<br />{fmtTime(record.punchOut)}
+                        </div>
+                      </InfoWindow>
+                    )}
+                  </Marker>
+                )}
+              </GoogleMap>
+            ) : (
+              <div className="ar__map-loading">Loading map…</div>
+            )}
+
+            {!inLoc && !outLoc && (
+              <p className="ar__modal-no-loc">No location data recorded for this entry.</p>
+            )}
+
+            {record.locationViewLogs?.length > 0 && (
+              <div className="ar__loc-history">
+                <p className="ar__loc-history-title">
+                  <i className="ti ti-history" /> Access history
+                </p>
+                <ul className="ar__loc-history-list">
+                  {[...record.locationViewLogs].reverse().map((log, idx) => (
+                    <li key={idx}>
+                      <span className="ar__loc-history-who">{log.viewedBy?.name || "A manager"}</span>
+                      <span className="ar__loc-history-when">{new Date(log.viewedAt).toLocaleString()}</span>
+                      <span className="ar__loc-history-reason">{log.reason}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -279,6 +349,10 @@ const RegularizeModal = ({ rec, onClose, onUpdated }) => {
   const [error, setError] = useState("");
 
   const runAction = async (action) => {
+    if (action !== "reset" && !note.trim()) {
+      setError("A reason is required to regularize attendance.");
+      return;
+    }
     setSubmitting(true);
     setError("");
     try {
@@ -324,7 +398,9 @@ const RegularizeModal = ({ rec, onClose, onUpdated }) => {
           )}
         </div>
 
-        <label className="ar__reg-label" htmlFor="reg-note">Reason (optional)</label>
+        <label className="ar__reg-label" htmlFor="reg-note">
+          Reason <span className="ar__reg-required">(required for Full/Half Day)</span>
+        </label>
         <textarea
           id="reg-note"
           className="ar__reg-note"
@@ -372,6 +448,10 @@ const AttendanceRecords = () => {
   const [sundayStatusByUser, setSundayStatusByUser] = useState({});
 
   const handleRegularized = (updated) => {
+    setRecords((prev) => prev.map((r) => (r._id === updated._id ? updated : r)));
+  };
+
+  const handleLocationLogged = (updated) => {
     setRecords((prev) => prev.map((r) => (r._id === updated._id ? updated : r)));
   };
 
@@ -770,7 +850,11 @@ const AttendanceRecords = () => {
       </div>
 
       {selectedRec && (
-        <LocationModal rec={selectedRec} onClose={() => setSelectedRec(null)} />
+        <LocationModal
+          rec={selectedRec}
+          onClose={() => setSelectedRec(null)}
+          onLogged={handleLocationLogged}
+        />
       )}
 
       {regularizingRec && (

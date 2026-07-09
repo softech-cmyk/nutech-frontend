@@ -30,6 +30,7 @@ const ManagerDashboard = () => {
   const [activeNav, setActiveNav]     = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [holiday, setHoliday] = useState(null);
   const [counts, setCounts]           = useState({
     present: 0,
     absent: 0,
@@ -58,7 +59,7 @@ const ManagerDashboard = () => {
       if (meData.user?.name) setManagerName(meData.user.name);
 
       // Fetch team attendance for today
-      const [todayRes, recordsRes, leavesRes] = await Promise.all([
+      const [todayRes, recordsRes, leavesRes, holidayRes] = await Promise.all([
         fetch(`${API}/attendance/all?date=${todayStr()}`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
@@ -68,15 +69,21 @@ const ManagerDashboard = () => {
         fetch(`${API}/leaves/all`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
+        fetch(`${API}/holidays/today`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
-      const todayData   = await todayRes.json();
-      const recordsData = await recordsRes.json();
-      const leavesData  = await leavesRes.json();
+      const todayData    = await todayRes.json();
+      const recordsData  = await recordsRes.json();
+      const leavesData   = await leavesRes.json();
+      const holidayData  = await holidayRes.json();
+
+      setHoliday(holidayData.holiday || null);
 
       const presentCount   = todayData.records?.length || 0;
       const totalEmployees = meData.user ? await fetchEmployeeCount(token) : 0;
-      const absentCount    = Math.max(0, totalEmployees - presentCount);
+      const absentCount    = holidayData.holiday ? 0 : Math.max(0, totalEmployees - presentCount);
       const totalRecords   = recordsData.records?.length || 0;
       const pendingLeaves  = (leavesData.leaves || []).filter((l) => l.status === "pending").length;
       const approvedLeaves = (leavesData.leaves || []).filter((l) => l.status === "approved").length;
@@ -125,16 +132,17 @@ const ManagerDashboard = () => {
     { id: "present",    label: "Present Today",      icon: "ti-user-check",       path: "/PresentToday"     },
     { id: "absent",     label: "Absent Today",       icon: "ti-user-x",           path: "/AbsentToday"      },
     { id: "leaves",     label: "Applied Leaves",     icon: "ti-calendar-event",   path: "/LeavesApplied"    },
-    { id: "onleaves",   label: "On Leaves",          icon: "ti-calendar-check",   path: "/AcceptedLeaves"   },
+    { id: "onleaves",   label: "Leave Reports",      icon: "ti-calendar-check",   path: "/AcceptedLeaves"   },
     { id: "records",    label: "Attendance Records", icon: "ti-history",          path: "/AttendanceRecords" },
     { id: "rejected",   label: "Rejected Leaves",   icon: "ti-calendar-x",       path: "/RejectedLeaves"    },
+    { id: "holidays",   label: "Holidays",           icon: "ti-calendar-star",    path: "/Holidays"          },
   ];
 
   const dashboardCards = [
     { id: 1, title: "Present Today",       count: counts.present, icon: <FaCheckCircle />,     variant: "present"   },
     { id: 2, title: "Absent Today",        count: counts.absent,  icon: <FaTimesCircle />,     variant: "absent"    },
     { id: 3, title: "Applied Leaves",      count: counts.appliedLeaves, icon: <FaFileAlt />, variant: "applied"   },
-    { id: 4, title: "On Leaves",           count: counts.onLeaves, icon: <FaCalendarAlt />,     variant: "on-leaves" },
+    { id: 4, title: "Leave Reports",       count: counts.onLeaves, icon: <FaCalendarAlt />,     variant: "on-leaves" },
     { id: 5, title: "Attendance Records",  count: counts.records, icon: <FaHistory />,          variant: "records"   },
     { id: 6, title: "Rejected Leaves",     count: counts.rejectedLeaves, icon: <FaExclamationCircle />, variant: "rejected" },
   ];
@@ -253,6 +261,13 @@ const ManagerDashboard = () => {
             </button>
           </div>
         </header>
+
+        {holiday && (
+          <div className="mgr__holiday-banner">
+            <i className="ti ti-calendar-star" aria-hidden="true" />
+            Today is a holiday — {holiday.name}. Attendance is not affected.
+          </div>
+        )}
 
         {/* Cards */}
         {initialLoading ? (

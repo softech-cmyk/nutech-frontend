@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaTimesCircle } from "react-icons/fa";
+import { FaTimesCircle, FaCheck } from "react-icons/fa";
+import toast from "react-hot-toast";
 import HomeButton from "../../HomeButton/HomeButton";
 import "./RejectedLeaves.css";
 
@@ -8,8 +9,11 @@ const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api`;
 
 const RejectedLeaves = () => {
   const navigate              = useNavigate();
+  const user                  = JSON.parse(localStorage.getItem("user") || "null");
+  const isManager              = user?.role === "manager";
   const [leaves, setLeaves]   = useState([]);
   const [loading, setLoading] = useState(true);
+  const [approvingId, setApprovingId] = useState(null);
 
   const fetchRejected = useCallback(async () => {
     const token = localStorage.getItem("token");
@@ -33,6 +37,25 @@ const RejectedLeaves = () => {
     const interval = setInterval(fetchRejected, 30000);
     return () => clearInterval(interval);
   }, [fetchRejected]);
+
+  const handleApprove = async (leave) => {
+    const token = localStorage.getItem("token");
+    setApprovingId(leave._id);
+    try {
+      const res = await fetch(`${API}/leaves/${leave._id}/approve`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      setLeaves((prev) => prev.filter((l) => l._id !== leave._id));
+      toast.success(`Moved ${leave.userId?.name || "leave"} to approved.`);
+    } catch (err) {
+      toast.error(err.message || "Could not approve leave.");
+    } finally {
+      setApprovingId(null);
+    }
+  };
 
   return (
     <div className="rejected-leaves">
@@ -68,6 +91,7 @@ const RejectedLeaves = () => {
                   <th>Date</th>
                   <th>Reason</th>
                   <th>Status</th>
+                  {isManager && <th>Action</th>}
                 </tr>
               </thead>
               <tbody>
@@ -92,6 +116,17 @@ const RejectedLeaves = () => {
                         <FaTimesCircle /> Rejected
                       </span>
                     </td>
+                    {isManager && (
+                      <td>
+                        <button
+                          className="rl__approve-btn"
+                          onClick={() => handleApprove(l)}
+                          disabled={approvingId === l._id}
+                        >
+                          <FaCheck /> {approvingId === l._id ? "Approving…" : "Move to approved"}
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
