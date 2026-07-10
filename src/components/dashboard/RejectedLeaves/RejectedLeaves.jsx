@@ -109,7 +109,7 @@ const RejectedLeaves = () => {
                     <td style={{ textTransform: "capitalize" }}>{l.userId?.role || "—"}</td>
                     <td>{l.userId?.department || "—"}</td>
                     <td><span className="leave-type">{l.leaveType}</span></td>
-                    <td>{l.leaveDate}</td>
+                    <td>{l.startDate}{l.startDate !== l.endDate ? ` → ${l.endDate}` : ""}</td>
                     <td>{l.reason}</td>
                     <td>
                       <span className="rejected-status">

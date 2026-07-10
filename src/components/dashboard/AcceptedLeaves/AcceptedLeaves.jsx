@@ -127,7 +127,7 @@ const AcceptedLeaves = () => {
                     </td>
                     <td style={{ textTransform: "capitalize" }}>{l.userId?.role || "—"}</td>
                     <td><span className="al__type">{l.leaveType}</span></td>
-                    <td>{l.leaveDate}</td>
+                    <td>{l.startDate}{l.startDate !== l.endDate ? ` → ${l.endDate}` : ""}</td>
                     <td>{l.reason}</td>
                     <td><span className="al__approved">Approved</span></td>
                     {isManager && (

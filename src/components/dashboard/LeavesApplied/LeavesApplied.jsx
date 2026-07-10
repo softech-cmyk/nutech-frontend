@@ -149,7 +149,7 @@ const LeavesApplied = () => {
                     </td>
                     <td style={{ textTransform: "capitalize" }}>{l.userId?.role || "—"}</td>
                     <td><span className="la__type-badge">{l.leaveType}</span></td>
-                    <td>{l.leaveDate}</td>
+                    <td>{l.startDate}{l.startDate !== l.endDate ? ` → ${l.endDate}` : ""}</td>
                     <td className="la__reason">{l.reason}</td>
                     <td>
                       <span className={`la__status la__status--${l.status}`}>

@@ -6,10 +6,15 @@ import "./LeaveApplicationButton.css";
 const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api`;
 const CL_ANNUAL_QUOTA = 12;
 
+const todayStr = () => new Date().toISOString().split("T")[0];
+const daysInRange = (start, end) => Math.round((new Date(end) - new Date(start)) / 86400000) + 1;
+
 const LeaveApplicationButton = () => {
   const [reason, setReason]         = useState("");
-  const [leaveDate, setLeaveDate]   = useState(new Date().toISOString().split("T")[0]);
+  const [startDate, setStartDate]   = useState(todayStr());
+  const [endDate, setEndDate]       = useState(todayStr());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [submitted, setSubmitted]   = useState(false);
   const [leaveType, setLeaveType]   = useState("CL");
   const [error, setError]           = useState("");
@@ -26,9 +31,9 @@ const LeaveApplicationButton = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      const used = (data.leaves || []).filter(
-        (l) => l.leaveType === "CL" && l.status !== "rejected" && l.leaveDate?.startsWith(String(year))
-      ).length;
+      const used = (data.leaves || [])
+        .filter((l) => l.leaveType === "CL" && l.status !== "rejected" && l.startDate?.startsWith(String(year)))
+        .reduce((sum, l) => sum + daysInRange(l.startDate, l.endDate), 0);
       setClUsed(used);
       setLeaveType((prev) => (prev === "CL" && used >= CL_ANNUAL_QUOTA ? "SL" : prev));
     } catch {
@@ -41,7 +46,8 @@ const LeaveApplicationButton = () => {
   }, [fetchClUsage]);
 
   const handleSend = async () => {
-    if (!reason.trim() || !leaveDate) { setError("Please fill in all fields."); return; }
+    if (!reason.trim() || !startDate || !endDate) { setError("Please fill in all fields."); return; }
+    if (startDate > endDate) { setError("Start date must be on or before end date."); return; }
     if (leaveType === "CL" && clQuotaReached) {
       setError(`You've used all ${CL_ANNUAL_QUOTA} Casual Leave (CL) days for this year.`);
       return;
@@ -52,7 +58,7 @@ const LeaveApplicationButton = () => {
       const res  = await fetch(`${API}/leaves/apply`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ leaveType, reason, leaveDate }),
+        body: JSON.stringify({ leaveType, reason, startDate, endDate }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
@@ -60,7 +66,8 @@ const LeaveApplicationButton = () => {
       fetchClUsage();
       setTimeout(() => {
         setReason("");
-        setLeaveDate(new Date().toISOString().split("T")[0]);
+        setStartDate(todayStr());
+        setEndDate(todayStr());
         setLeaveType("CL");
         setSubmitted(false);
       }, 2500);
@@ -118,9 +125,9 @@ const LeaveApplicationButton = () => {
             />
           </div>
 
-          {/* Date Picker */}
+          {/* Date Range Picker */}
           <div className="form-group">
-            <label className="form-label">Leave Date</label>
+            <label className="form-label">From</label>
             <div className="date-picker-wrapper">
               <button
                 type="button"
@@ -128,17 +135,48 @@ const LeaveApplicationButton = () => {
                 onClick={() => setShowDatePicker(!showDatePicker)}
               >
                 <FaCalendar className="calendar-icon" />
-                <span>{leaveDate}</span>
+                <span>{startDate}</span>
               </button>
 
               {showDatePicker && (
                 <div className="date-picker-popup">
                   <input
                     type="date"
-                    value={leaveDate}
+                    value={startDate}
                     onChange={(e) => {
-                      setLeaveDate(e.target.value);
+                      const value = e.target.value;
+                      setStartDate(value);
+                      if (endDate < value) setEndDate(value);
                       setShowDatePicker(false);
+                    }}
+                    className="date-picker-input"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">To</label>
+            <div className="date-picker-wrapper">
+              <button
+                type="button"
+                className="date-input-btn"
+                onClick={() => setShowEndDatePicker(!showEndDatePicker)}
+              >
+                <FaCalendar className="calendar-icon" />
+                <span>{endDate}</span>
+              </button>
+
+              {showEndDatePicker && (
+                <div className="date-picker-popup">
+                  <input
+                    type="date"
+                    value={endDate}
+                    min={startDate}
+                    onChange={(e) => {
+                      setEndDate(e.target.value);
+                      setShowEndDatePicker(false);
                     }}
                     className="date-picker-input"
                   />

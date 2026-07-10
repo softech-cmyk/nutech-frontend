@@ -228,7 +228,8 @@ const EmployeeDashboard = () => {
                     {latestLeave.status.charAt(0).toUpperCase() + latestLeave.status.slice(1)}
                   </span>
                   <p className="ed__leave-meta">
-                    {latestLeave.leaveType} &middot; {latestLeave.leaveDate}
+                    {latestLeave.leaveType} &middot; {latestLeave.startDate}
+                    {latestLeave.startDate !== latestLeave.endDate ? ` → ${latestLeave.endDate}` : ""}
                   </p>
                   {latestLeave.status === "rejected" && (
                     <div className="ed__leave-reason">
