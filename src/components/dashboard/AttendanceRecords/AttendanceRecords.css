@@ -537,6 +537,20 @@
 .ar__legend--in  { color: #16a34a; }
 .ar__legend--out { color: #0369a1; }
 
+.ar__modal-addresses {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.ar__modal-address {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-dark);
+}
+.ar__modal-address--in  strong { color: #16a34a; }
+.ar__modal-address--out strong { color: #0369a1; }
+
 .ar__map-loading {
   height: 340px;
   border-radius: 12px;

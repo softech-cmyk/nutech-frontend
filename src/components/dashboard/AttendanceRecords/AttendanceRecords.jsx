@@ -279,6 +279,21 @@ const LocationModal = ({ rec, onClose, onLogged }) => {
               <span className="ar__legend ar__legend--out">● Punch Out</span>
             </div>
 
+            {(record.punchInAddress || record.punchOutAddress) && (
+              <div className="ar__modal-addresses">
+                {record.punchInAddress && (
+                  <p className="ar__modal-address ar__modal-address--in">
+                    <i className="ti ti-map-pin" /> <strong>In:</strong> {record.punchInAddress}
+                  </p>
+                )}
+                {record.punchOutAddress && (
+                  <p className="ar__modal-address ar__modal-address--out">
+                    <i className="ti ti-map-pin" /> <strong>Out:</strong> {record.punchOutAddress}
+                  </p>
+                )}
+              </div>
+            )}
+
             {isLoaded ? (
               <GoogleMap mapContainerStyle={MAP_STYLE} center={center} zoom={15}>
                 {inLoc && (
