@@ -771,8 +771,8 @@ const AttendanceRecords = () => {
                                 </td>
                                 <td className="ar__actions-cell">
                                   <div className="ar__actions-inner">
-                                    <button className="ar__loc-btn" onClick={() => setSelectedRec(rec)} title="View on map">
-                                      <i className="ti ti-map-pin" />
+                                    <button className="ar__loc-btn ar__loc-btn--labeled" onClick={() => setSelectedRec(rec)} title="View punch location on map">
+                                      <i className="ti ti-map-pin" /> Location
                                     </button>
                                     <button className="ar__loc-btn" onClick={() => setRegularizingRec(rec)} title="Regularize attendance">
                                       <i className="ti ti-pencil" />
@@ -834,8 +834,8 @@ const AttendanceRecords = () => {
                       </td>
                       <td className="ar__actions-cell">
                         <div className="ar__actions-inner">
-                          <button className="ar__loc-btn" onClick={() => setSelectedRec(rec)} title="View on map">
-                            <i className="ti ti-map-pin" />
+                          <button className="ar__loc-btn ar__loc-btn--labeled" onClick={() => setSelectedRec(rec)} title="View punch location on map">
+                            <i className="ti ti-map-pin" /> Location
                           </button>
                           <button className="ar__loc-btn" onClick={() => setRegularizingRec(rec)} title="Regularize attendance">
                             <i className="ti ti-pencil" />

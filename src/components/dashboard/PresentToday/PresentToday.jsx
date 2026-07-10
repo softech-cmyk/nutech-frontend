@@ -81,7 +81,9 @@ const PresentToday = () => {
                   <th>Department</th>
                   <th>Company</th>
                   <th>Punch In</th>
+                  <th>Punch In Location</th>
                   <th>Punch Out</th>
+                  <th>Punch Out Location</th>
                   <th>Hours</th>
                   <th>Status</th>
                 </tr>
@@ -94,7 +96,9 @@ const PresentToday = () => {
                     <td>{r.userId?.department || "—"}</td>
                     <td>{r.company || "—"}</td>
                     <td>{fmtTime(r.punchIn)}</td>
+                    <td className="present__loc">{r.punchInAddress || "—"}</td>
                     <td>{fmtTime(r.punchOut)}</td>
+                    <td className="present__loc">{r.punchOutAddress || "—"}</td>
                     <td>{fmtMins(r.totalMinutes)}</td>
                     <td>
                       <span className={`present__badge present__badge--${r.status}`}>

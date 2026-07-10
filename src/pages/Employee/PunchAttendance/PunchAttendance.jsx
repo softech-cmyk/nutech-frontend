@@ -130,24 +130,6 @@ const PunchAttendance = () => {
     };
   }, [status]);
 
-  // while on-duty, poll for an auto punch-out so the UI updates without a reload
-  useEffect(() => {
-    if (status !== "on-duty") return;
-    const token = localStorage.getItem("token");
-    const interval = setInterval(() => {
-      fetch(`${API}/today`, { headers: { Authorization: `Bearer ${token}` } })
-        .then((r) => r.json())
-        .then(({ attendance }) => {
-          if (!attendance) return;
-          setSessions(attendance.sessions || []);
-          if (attendance.totalMinutes != null) setTotalMinutes(attendance.totalMinutes);
-          if (attendance.status) setDayStatus(attendance.status);
-        })
-        .catch(() => {});
-    }, 60000);
-    return () => clearInterval(interval);
-  }, [status]);
-
   const fmt = (d) =>
     d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const fmtShort = (iso) =>

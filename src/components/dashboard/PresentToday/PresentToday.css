@@ -112,7 +112,7 @@
 .present__table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 900px;
+  min-width: 1150px;
 }
 
 .present__table thead th {
@@ -146,6 +146,12 @@
 .present__name {
   font-weight: 700;
   color: var(--nt-green-deep);
+}
+.present__loc {
+  white-space: normal;
+  max-width: 220px;
+  font-size: 0.9rem;
+  color: var(--nt-muted);
 }
 
 .present__table tbody tr {
