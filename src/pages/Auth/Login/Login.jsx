@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { subscribeToPush } from "../../../utils/push";
 import "./Login.css";
 
 const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/auth`;
@@ -31,6 +32,7 @@ const Login = () => {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+      subscribeToPush();
 
       if (data.user.mustChangePassword) {
         navigate("/ChangePassword");
