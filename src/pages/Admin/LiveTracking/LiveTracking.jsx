@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from "react-leaflet";
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -77,9 +77,15 @@ const EmployeeMarker = ({ point, isSelected }) => {
 
 const LiveTracking = () => {
   const navigate = useNavigate();
+  const routerLocation = useLocation();
+  // A "Track" button elsewhere (e.g. Present Today) can deep-link straight
+  // to one employee by passing { userId, name } in navigation state.
+  const requested = useRef(routerLocation.state || null);
+
   const [locations, setLocations] = useState({}); // userId -> { userId, name, lat, lng, updatedAt }
   const [loading, setLoading] = useState(true);
-  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [selectedUserId, setSelectedUserId] = useState(requested.current?.userId || null);
+  const [notFoundNotice, setNotFoundNotice] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -92,6 +98,9 @@ const LiveTracking = () => {
         const map = {};
         (initial || []).forEach((loc) => { map[loc.userId] = loc; });
         setLocations(map);
+        if (requested.current?.userId && !map[requested.current.userId]) {
+          setNotFoundNotice(true);
+        }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -105,6 +114,7 @@ const LiveTracking = () => {
     };
     const onUpdate = (entry) => {
       setLocations((prev) => ({ ...prev, [entry.userId]: entry }));
+      if (requested.current?.userId === entry.userId) setNotFoundNotice(false);
     };
     const onOffline = ({ userId }) => {
       setLocations((prev) => {
@@ -140,6 +150,13 @@ const LiveTracking = () => {
           <i className="ti ti-map-pin" /> {points.length} on duty
         </span>
       </div>
+
+      {!loading && notFoundNotice && (
+        <p className="lt__notice">
+          <i className="ti ti-info-circle" /> {requested.current?.name || "That employee"} isn't currently on duty
+          with location sharing active — showing everyone else who is.
+        </p>
+      )}
 
       {!loading && points.length === 0 && (
         <p className="lt__empty">No employees currently on duty with location sharing active.</p>

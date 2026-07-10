@@ -198,6 +198,30 @@
   display: none;
 }
 
+.present__track-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--nt-blue);
+  border: none;
+  border-radius: 8px;
+  padding: 7px 13px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.12s;
+}
+.present__track-btn:hover {
+  background: var(--nt-blue-dark);
+  transform: translateY(-1px);
+}
+.present__track-off {
+  color: var(--nt-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
 @media (max-width: 640px) {
   .present { padding: 1.5rem; }
   .present__card { padding: 1.25rem; }

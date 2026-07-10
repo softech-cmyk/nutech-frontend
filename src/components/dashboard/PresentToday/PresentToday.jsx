@@ -17,6 +17,13 @@ const fmtMins = (mins) => {
   return `${h}h ${m}m`;
 };
 
+// Only an employee with an open (punched-in, not punched-out) session is
+// actively pushing a live location — everyone else has nothing to track.
+const isOnDuty = (r) => {
+  const last = r.sessions?.[r.sessions.length - 1];
+  return !!(last && !last.punchOut);
+};
+
 const PresentToday = () => {
   const navigate          = useNavigate();
   const [rows, setRows]   = useState([]);
@@ -86,6 +93,7 @@ const PresentToday = () => {
                   <th>Punch Out Location</th>
                   <th>Hours</th>
                   <th>Status</th>
+                  <th>Live</th>
                 </tr>
               </thead>
               <tbody>
@@ -104,6 +112,22 @@ const PresentToday = () => {
                       <span className={`present__badge present__badge--${r.status}`}>
                         {r.status === "present" ? "Present" : r.status === "half-day" ? "Half Day" : "Absent"}
                       </span>
+                    </td>
+                    <td>
+                      {isOnDuty(r) ? (
+                        <button
+                          className="present__track-btn"
+                          onClick={() =>
+                            navigate("/LiveTracking", {
+                              state: { userId: r.userId?._id, name: r.userId?.name },
+                            })
+                          }
+                        >
+                          <i className="ti ti-map-pin" /> Track
+                        </button>
+                      ) : (
+                        <span className="present__track-off">Off duty</span>
+                      )}
                     </td>
                   </tr>
                 ))}
