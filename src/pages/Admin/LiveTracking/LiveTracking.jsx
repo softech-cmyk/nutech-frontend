@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from "react-leaflet";
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -44,10 +44,42 @@ const FitBounds = ({ points }) => {
   return null;
 };
 
+// Flies the map to a selected employee and pops their marker open, so
+// clicking a row in the list below jumps straight to that person.
+const FlyToSelected = ({ target }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (target) map.flyTo([target.lat, target.lng], 16, { duration: 0.8 });
+  }, [target, map]);
+  return null;
+};
+
+const EmployeeMarker = ({ point, isSelected }) => {
+  const markerRef = useRef(null);
+
+  useEffect(() => {
+    if (isSelected && markerRef.current) markerRef.current.openPopup();
+  }, [isSelected]);
+
+  return (
+    <Marker position={[point.lat, point.lng]} ref={markerRef}>
+      <Tooltip permanent direction="top" offset={[0, -38]} className="lt__marker-label">
+        {point.name}
+      </Tooltip>
+      <Popup>
+        <strong>{point.name}</strong>
+        <br />
+        Last update: {fmtTime(point.updatedAt)}
+      </Popup>
+    </Marker>
+  );
+};
+
 const LiveTracking = () => {
   const navigate = useNavigate();
   const [locations, setLocations] = useState({}); // userId -> { userId, name, lat, lng, updatedAt }
   const [loading, setLoading] = useState(true);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -94,6 +126,7 @@ const LiveTracking = () => {
   }, [navigate]);
 
   const points = Object.values(locations);
+  const selectedPoint = points.find((p) => p.userId === selectedUserId) || null;
 
   return (
     <div className="lt">
@@ -123,24 +156,24 @@ const LiveTracking = () => {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <FitBounds points={points} />
+          <FlyToSelected target={selectedPoint} />
           {points.map((p) => (
-            <Marker key={p.userId} position={[p.lat, p.lng]}>
-              <Popup>
-                <strong>{p.name}</strong>
-                <br />
-                Last update: {fmtTime(p.updatedAt)}
-              </Popup>
-            </Marker>
+            <EmployeeMarker key={p.userId} point={p} isSelected={p.userId === selectedUserId} />
           ))}
         </MapContainer>
       </div>
 
       <ul className="lt__list">
         {points.map((p) => (
-          <li key={p.userId} className="lt__list-item">
+          <li
+            key={p.userId}
+            className={`lt__list-item ${p.userId === selectedUserId ? "is-selected" : ""}`}
+            onClick={() => setSelectedUserId(p.userId)}
+          >
             <i className="ti ti-user-circle" />
             <span className="lt__list-name">{p.name}</span>
             <span className="lt__list-time">updated {fmtTime(p.updatedAt)}</span>
+            <i className="ti ti-map-pin-search lt__list-goto" />
           </li>
         ))}
       </ul>
