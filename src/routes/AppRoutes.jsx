@@ -14,6 +14,7 @@ import AttendanceRecords from "../components/dashboard/AttendanceRecords/Attenda
 import RejectedLeaves from "../components/dashboard/RejectedLeaves/RejectedLeaves";
 import LeaveApplicationButton from "../components/dashboard/LeaveApplicationButton/LeaveApplicationButton";
 import Holidays from "../pages/Admin/Holidays/Holidays";
+import LiveTracking from "../pages/Admin/LiveTracking/LiveTracking";
 
 function AppRoutes() {
   return (
@@ -36,6 +37,7 @@ function AppRoutes() {
       <Route path="/RejectedLeaves" element={<RejectedLeaves />} />
       <Route path="/LeaveApplicationButton" element={<LeaveApplicationButton />} />
       <Route path="/Holidays" element={<Holidays />} />
+      <Route path="/LiveTracking" element={<LiveTracking />} />
       <Route path="*" element={<div>Page not found</div>} />
     </Routes>
   );

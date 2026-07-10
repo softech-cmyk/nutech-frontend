@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import TractorLoader from "../../../components/TractorLoader/TractorLoader";
 import HomeButton from "../../../components/HomeButton/HomeButton";
+import { disconnectSocket } from "../../../utils/socket";
 import "./ManagerDashboard.css";
 import {
   FaCheckCircle,
@@ -129,6 +130,7 @@ const ManagerDashboard = () => {
     { id: "employees",  label: "Employees",           icon: "ti-users",           path: "/Employees"        },
     { id: "add-employee", label: "Add Employee",     icon: "ti-user-plus",       path: "/CreateEmployee"   },
     { id: "punch",      label: "Punch Attendance",   icon: "ti-fingerprint",      path: "/PunchAttendance"  },
+    { id: "live",       label: "Live Tracking",      icon: "ti-map-pin",          path: "/LiveTracking"     },
     { id: "present",    label: "Present Today",      icon: "ti-user-check",       path: "/PresentToday"     },
     { id: "absent",     label: "Absent Today",       icon: "ti-user-x",           path: "/AbsentToday"      },
     { id: "leaves",     label: "Applied Leaves",     icon: "ti-calendar-event",   path: "/LeavesApplied"    },
@@ -158,6 +160,7 @@ const ManagerDashboard = () => {
   };
 
   const handleLogout = () => {
+    disconnectSocket();
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/Login");

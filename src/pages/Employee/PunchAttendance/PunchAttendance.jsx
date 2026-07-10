@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleMap, useLoadScript, Marker, InfoWindow } from "@react-google-maps/api";
+import { getSocket, disconnectSocket } from "../../../utils/socket";
 import "./PunchAttendance.css";
 
 const employeeNav = [
@@ -14,6 +15,7 @@ const employeeNav = [
 const managerNav = [
   { id: "dashboard",  label: "Dashboard",          icon: "ti-layout-dashboard", path: "/managerdashboard"   },
   { id: "punch",      label: "Punch Attendance",   icon: "ti-fingerprint",      path: "/PunchAttendance"    },
+  { id: "live",       label: "Live Tracking",      icon: "ti-map-pin",          path: "/LiveTracking"       },
   { id: "present",    label: "Present Today",      icon: "ti-user-check",       path: "/PresentToday"       },
   { id: "absent",     label: "Absent Today",       icon: "ti-user-x",           path: "/AbsentToday"        },
   { id: "leaves",     label: "Applied Leaves",     icon: "ti-calendar-event",   path: "/LeavesApplied"      },
@@ -117,13 +119,21 @@ const PunchAttendance = () => {
       .catch(() => {});
   }, []);
 
-  // watch live location while on-duty
+  // watch live location while on-duty, and push it to managers over the socket
   useEffect(() => {
     if (status === "on-duty" && navigator.geolocation) {
+      const socket = getSocket();
       watchRef.current = navigator.geolocation.watchPosition(
-        (pos) => setLivePos({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => {}
+        (pos) => {
+          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setLivePos(coords);
+          socket.emit("location:update", coords);
+        },
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 10000 }
       );
+    } else {
+      getSocket().emit("location:stop");
     }
     return () => {
       if (watchRef.current != null) navigator.geolocation.clearWatch(watchRef.current);
@@ -204,6 +214,7 @@ const PunchAttendance = () => {
   });
 
   const handleLogout = () => {
+    disconnectSocket();
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/Login");
