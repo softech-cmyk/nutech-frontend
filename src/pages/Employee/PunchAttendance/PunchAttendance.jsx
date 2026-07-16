@@ -36,8 +36,17 @@ const getLocation = () =>
     if (!navigator.geolocation) { resolve(null); return; }
     navigator.geolocation.getCurrentPosition(
       (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => resolve(null),
-      { timeout: 5000, enableHighAccuracy: true }
+      () => {
+        // A fresh high-accuracy fix can fail or time out on back-to-back
+        // punches (common for punch-out right after punch-in) — fall back to
+        // a coarser, faster lookup rather than sending no location at all.
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          () => resolve(null),
+          { timeout: 8000, enableHighAccuracy: false, maximumAge: 60000 }
+        );
+      },
+      { timeout: 8000, enableHighAccuracy: true, maximumAge: 30000 }
     );
   });
 

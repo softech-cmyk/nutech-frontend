@@ -81,6 +81,19 @@ const PresentToday = () => {
             <p className="present__empty">No one has punched in yet today.</p>
           ) : (
             <table className="present__table">
+              <colgroup>
+                <col style={{ width: "48px" }} />
+                <col style={{ width: "150px" }} />
+                <col style={{ width: "140px" }} />
+                <col style={{ width: "140px" }} />
+                <col style={{ width: "90px" }} />
+                <col style={{ width: "220px" }} />
+                <col style={{ width: "90px" }} />
+                <col style={{ width: "220px" }} />
+                <col style={{ width: "80px" }} />
+                <col style={{ width: "100px" }} />
+                <col style={{ width: "110px" }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th>#</th>
@@ -100,13 +113,13 @@ const PresentToday = () => {
                 {rows.map((r, idx) => (
                   <tr key={r._id}>
                     <td>{idx + 1}</td>
-                    <td className="present__name">{r.userId?.name || r.userId?.phone || "—"}</td>
+                    <td className="present__name" title={r.userId?.name || r.userId?.phone || ""}>{r.userId?.name || r.userId?.phone || "—"}</td>
                     <td>{r.userId?.department || "—"}</td>
                     <td>{r.company || "—"}</td>
                     <td>{fmtTime(r.punchIn)}</td>
-                    <td className="present__loc">{r.punchInAddress || "—"}</td>
+                    <td className="present__loc" data-tooltip={r.punchInAddress || undefined}>{r.punchInAddress || "—"}</td>
                     <td>{fmtTime(r.punchOut)}</td>
-                    <td className="present__loc">{r.punchOutAddress || "—"}</td>
+                    <td className="present__loc" data-tooltip={r.punchOutAddress || undefined}>{r.punchOutAddress || "—"}</td>
                     <td>{fmtMins(r.totalMinutes)}</td>
                     <td>
                       <span className={`present__badge present__badge--${r.status}`}>

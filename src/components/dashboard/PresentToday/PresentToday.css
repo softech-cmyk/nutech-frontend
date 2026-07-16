@@ -112,7 +112,8 @@
 .present__table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1150px;
+  table-layout: fixed;
+  min-width: 1368px;
 }
 
 .present__table thead th {
@@ -142,16 +143,61 @@
   font-weight: 500;
   vertical-align: middle;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .present__name {
   font-weight: 700;
   color: var(--nt-green-deep);
 }
 .present__loc {
-  white-space: normal;
-  max-width: 220px;
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: 0.9rem;
   color: var(--nt-muted);
+  cursor: default;
+}
+
+/* Full address on hover — a small styled popup instead of the plain
+   browser tooltip, since the cell text itself is truncated with ellipsis. */
+.present__loc[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  margin-top: 8px;
+  z-index: 30;
+  width: max-content;
+  max-width: 280px;
+  padding: 9px 13px;
+  background: var(--nt-green-deep);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.45;
+  white-space: normal;
+  border-radius: 8px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+  pointer-events: none;
+  animation: present-tooltip-in 0.12s ease-out;
+}
+.present__loc[data-tooltip]:hover::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 100%;
+  margin-top: 2px;
+  z-index: 31;
+  border: 6px solid transparent;
+  border-bottom-color: var(--nt-green-deep);
+  pointer-events: none;
+}
+
+@keyframes present-tooltip-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .present__table tbody tr {
