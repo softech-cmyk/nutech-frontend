@@ -3,6 +3,7 @@ import Login from "../pages/Auth/Login/Login";
 import ChangePassword from "../pages/Auth/ChangePassword/ChangePassword";
 import CreateEmployee from "../pages/Admin/CreateEmployee/CreateEmployee";
 import Employees from "../pages/Admin/Employees/Employees";
+import Payroll from "../pages/Admin/Payroll/Payroll";
 import ManagerDashboard from "../pages/Admin/ManagerDashboard/ManagerDashboard";
 import EmployeeDashboard from "../pages/Admin/EmployeeDashobard/EmployeeDashboard";
 import PunchAttendance from "../pages/Employee/PunchAttendance/PunchAttendance";
@@ -25,6 +26,7 @@ function AppRoutes() {
       <Route path="/ChangePassword" element={<ChangePassword />} />
       <Route path="/CreateEmployee" element={<CreateEmployee />} />
       <Route path="/Employees" element={<Employees />} />
+      <Route path="/Payroll" element={<Payroll />} />
       <Route path="/managerdashboard" element={<ManagerDashboard />} />
       <Route path="/ManagerDashboard" element={<ManagerDashboard />} />
       <Route path="/EmployeeDashboard" element={<EmployeeDashboard />} />

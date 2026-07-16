@@ -48,6 +48,7 @@ const CreateEmployee = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [shiftStart, setShiftStart] = useState("10:00");
   const [shiftEnd, setShiftEnd] = useState("18:30");
+  const [monthlySalary, setMonthlySalary] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -72,6 +73,7 @@ const CreateEmployee = () => {
     setShowConfirmPassword(false);
     setShiftStart("10:00");
     setShiftEnd("18:30");
+    setMonthlySalary("");
     setResult(null);
     setError("");
   };
@@ -83,6 +85,10 @@ const CreateEmployee = () => {
     if (password !== confirmPassword) { setError("Passwords do not match."); return; }
     if (!shiftStart || !shiftEnd) { setError("Please set the employee's working hours."); return; }
     if (shiftEnd <= shiftStart) { setError("Shift end time must be after the start time."); return; }
+    if (monthlySalary === "" || isNaN(monthlySalary) || Number(monthlySalary) < 0) {
+      setError("Enter a valid monthly salary.");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
@@ -93,7 +99,7 @@ const CreateEmployee = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name, phone: phoneNumber, countryCode, department, role, company, password, shiftStart, shiftEnd }),
+        body: JSON.stringify({ name, phone: phoneNumber, countryCode, department, role, company, password, shiftStart, shiftEnd, monthlySalary: Number(monthlySalary) }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
@@ -101,6 +107,7 @@ const CreateEmployee = () => {
       setResult({
         name: data.user.name, phone: data.user.phone, countryCode: data.user.countryCode,
         shiftStart: data.user.shiftStart, shiftEnd: data.user.shiftEnd,
+        monthlySalary: data.user.monthlySalary,
       });
     } catch (err) {
       setError(err.message);
@@ -127,6 +134,10 @@ const CreateEmployee = () => {
           <div className="cemp__result-row">
             <span>Working hours</span>
             <strong>{fmtTime(result.shiftStart)} – {fmtTime(result.shiftEnd)}</strong>
+          </div>
+          <div className="cemp__result-row">
+            <span>Monthly salary</span>
+            <strong>₹{Number(result.monthlySalary).toLocaleString("en-IN")}</strong>
           </div>
 
           <button type="button" className="cemp__secondary" onClick={resetForm}>
@@ -243,6 +254,21 @@ const CreateEmployee = () => {
             <button type="button" className="cemp__preset-btn" onClick={() => { setShiftStart("09:00"); setShiftEnd("17:00"); }}>
               9:00 AM – 5:00 PM
             </button>
+          </div>
+
+          <label className="cemp__label" htmlFor="monthlySalary">Monthly salary (gross)</label>
+          <div className="cemp__field">
+            <i className="ti ti-currency-rupee cemp__field-icon" aria-hidden="true" />
+            <input
+              id="monthlySalary"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="e.g. 25000"
+              value={monthlySalary}
+              onChange={(e) => setMonthlySalary(e.target.value)}
+              required
+            />
           </div>
 
           <label className="cemp__label" htmlFor="password">Password</label>

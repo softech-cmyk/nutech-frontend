@@ -1,0 +1,348 @@
+.pay {
+  min-height: 100vh;
+  padding: 2rem 2.5rem;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: linear-gradient(165deg, #ffffff 0%, #f0fdf4 55%, #dcfce7 100%);
+  color: #1f3b22;
+  animation: pay-fade-in 0.35s ease;
+}
+
+@keyframes pay-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pay__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.6rem;
+  flex-wrap: wrap;
+}
+.pay__header h1 {
+  margin: 0 0 4px;
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: #14532d;
+  letter-spacing: -0.3px;
+}
+.pay__header p {
+  margin: 0;
+  color: #6b8f6e;
+  font-size: 0.95rem;
+}
+
+.pay__manage-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(90deg, #15803d, #22c55e);
+  box-shadow: 0 10px 22px rgba(21, 128, 61, 0.28);
+  transition: transform 0.14s ease, box-shadow 0.18s ease;
+}
+.pay__manage-btn:hover { box-shadow: 0 12px 28px rgba(21, 128, 61, 0.4); }
+.pay__manage-btn:active { transform: scale(0.97); }
+
+/* ---------- Stat cards ---------- */
+.pay__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 1.6rem;
+}
+.pay__stat {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  background: #fff;
+  border: 2px solid #bbf7d0;
+  border-radius: 16px;
+  padding: 1.1rem 1.3rem;
+  box-shadow: 0 10px 24px rgba(21, 128, 61, 0.06);
+}
+.pay__stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.pay__stat-icon--gross     { background: #f0fdf4; color: #15803d; }
+.pay__stat-icon--deduction { background: #fee2e2; color: #b91c1c; }
+.pay__stat-icon--net       { background: #dcfce7; color: #16a34a; }
+.pay__stat-value {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #14532d;
+  line-height: 1.15;
+}
+.pay__stat-label {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6b8f6e;
+  font-weight: 600;
+}
+
+/* ---------- Filters ---------- */
+.pay__filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.pay__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 220px;
+  height: 46px;
+  padding: 0 14px;
+  background: #fff;
+  border: 2px solid #bbf7d0;
+  border-radius: 12px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.pay__search:focus-within {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
+}
+.pay__search .ti { color: #15803d; font-size: 18px; }
+.pay__search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.98rem;
+  color: #1a2e1c;
+}
+
+.pay__filters select {
+  height: 46px;
+  padding: 0 12px;
+  background: #fff;
+  border: 2px solid #bbf7d0;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  color: #1a2e1c;
+  cursor: pointer;
+  transition: border-color 0.18s ease;
+}
+.pay__filters select:hover { border-color: #86efac; }
+.pay__filters select:focus { outline: none; border-color: #22c55e; }
+
+.pay__error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fceeee;
+  color: #a32d2d;
+  border: 1.5px solid #f0c1c1;
+  border-radius: 11px;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  margin-bottom: 1.4rem;
+}
+
+/* ---------- Table ---------- */
+.pay__table-wrap {
+  background: #fff;
+  border: 2px solid #bbf7d0;
+  border-radius: 16px;
+  overflow: auto;
+  box-shadow: 0 14px 34px rgba(21, 128, 61, 0.08);
+}
+.pay__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1020px;
+}
+.pay__table thead th {
+  position: sticky;
+  top: 0;
+  text-align: left;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b8f6e;
+  font-weight: 700;
+  background: #f0fdf4;
+  padding: 14px 18px;
+  border-bottom: 2px solid #dcfce7;
+  white-space: nowrap;
+}
+.pay__table td {
+  padding: 13px 18px;
+  border-bottom: 1px solid #f0fdf4;
+  font-size: 0.95rem;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.pay__table tbody tr:nth-child(even) { background: #fafffb; }
+.pay__table tbody tr:last-child td { border-bottom: none; }
+.pay__table tbody tr:hover { background: #ecfdf3; }
+
+.pay__person { display: flex; align-items: center; gap: 12px; }
+.pay__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+.pay__avatar--manager  { background: linear-gradient(135deg, #0369a1, #38bdf8); }
+.pay__avatar--employee { background: linear-gradient(135deg, #15803d, #4ade80); }
+
+.pay__name { font-weight: 700; color: #14532d; }
+
+.pay__cell-strong { font-weight: 700; color: #14532d; }
+.pay__cell-deduction { font-weight: 700; color: #b91c1c; }
+.pay__cell-net { font-weight: 800; color: #15803d; }
+
+.pay__deduction-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: #b91c1c;
+  cursor: pointer;
+}
+.pay__deduction-btn:hover { text-decoration: underline; }
+.pay__deduction-btn .ti { font-size: 14px; }
+
+.pay__breakdown-row td {
+  padding: 0;
+  border-bottom: 1px solid #f0fdf4;
+}
+.pay__breakdown {
+  padding: 14px 18px 16px 54px;
+  background: #fafffb;
+}
+
+.pay__pay-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #15803d, #22c55e);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.14s ease, box-shadow 0.18s ease;
+}
+.pay__pay-btn:hover:not(:disabled) { box-shadow: 0 8px 18px rgba(21, 128, 61, 0.32); transform: translateY(-1px); }
+.pay__pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.pay__pay-btn .ti { font-size: 15px; }
+
+.pay__paid {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pay__paid-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.pay__paid-badge .ti { font-size: 14px; }
+
+.pay__undo-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #9ca3af;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pay__undo-btn:hover:not(:disabled) { color: #b91c1c; text-decoration: underline; }
+.pay__undo-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.pay__paid-badge--pending { background: #fffbeb; color: #b45309; }
+
+.pay__pay-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.pay__failed-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #b91c1c;
+}
+.pay__manual-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #9ca3af;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pay__manual-link:hover:not(:disabled) { color: #15803d; text-decoration: underline; }
+.pay__manual-link:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------- Empty state ---------- */
+.pay__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 3.5rem 1.5rem;
+  color: #6b8f6e;
+}
+.pay__empty .ti { font-size: 40px; color: #a3c4a8; }
+.pay__empty p { margin: 0; font-size: 0.98rem; }
+
+@media (max-width: 900px) {
+  .pay__stats { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .pay { padding: 1.5rem 1.25rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pay, .pay__manage-btn {
+    animation: none;
+    transition: none;
+  }
+}

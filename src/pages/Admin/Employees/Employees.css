@@ -260,6 +260,197 @@
 }
 .emps__reset-btn:hover { background: rgba(21, 128, 61, 0.18); transform: translateY(-1px); }
 
+.emps__salary-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #15803d;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.emps__salary-link:hover { text-decoration: underline; }
+
+/* ---------- Salary breakdown modal ---------- */
+.emps__modal-card--wide { width: min(440px, 100%); text-align: left; }
+.emps__modal-card--wide .emps__modal-icon,
+.emps__modal-card--wide .emps__modal-title,
+.emps__modal-card--wide .emps__modal-sub { text-align: center; }
+
+.emps__salary-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 4px 0 8px;
+  border: 1.5px solid #dcfce7;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.emps__salary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 14px;
+  background: #fafffb;
+  font-size: 0.88rem;
+  color: #3f5b43;
+}
+.emps__salary-row strong { color: #14532d; font-weight: 700; }
+.emps__salary-row--gross { background: #f0fdf4; }
+.emps__salary-row--deduction strong { color: #b91c1c; }
+
+.emps__deduction-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: #b91c1c;
+  cursor: pointer;
+}
+.emps__deduction-btn:hover { text-decoration: underline; }
+.emps__deduction-btn .ti { font-size: 13px; }
+
+.emps__deduction-detail { margin: -2px 0 2px; }
+.emps__salary-row--net {
+  background: #dcfce7;
+  border-top: 1.5px solid #86efac;
+  padding: 12px 14px;
+}
+.emps__salary-row--net span { font-weight: 700; color: #14532d; }
+.emps__salary-row--net strong { font-size: 1.05rem; color: #15803d; }
+
+.emps__salary-paid-icon { margin-left: 6px; font-size: 14px; color: #15803d; }
+
+.emps__pay-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 11px 16px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #15803d, #22c55e);
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.14s ease, box-shadow 0.18s ease;
+}
+.emps__pay-btn:hover:not(:disabled) { box-shadow: 0 10px 22px rgba(21, 128, 61, 0.32); transform: translateY(-1px); }
+.emps__pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.emps__paid-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+}
+.emps__paid-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #15803d;
+}
+.emps__undo-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #9ca3af;
+  cursor: pointer;
+}
+.emps__undo-btn:hover:not(:disabled) { color: #b91c1c; text-decoration: underline; }
+.emps__undo-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.emps__paid-banner--pending { background: #fffbeb; border-color: #fde68a; }
+.emps__paid-badge--pending { color: #b45309; }
+
+/* ---------- Bank account section ---------- */
+.emps__bank-section {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1.5px dashed #bbf7d0;
+  border-radius: 12px;
+  background: #fafffb;
+}
+.emps__bank-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #14532d;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.emps__bank-edit-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: normal;
+  color: #15803d;
+  cursor: pointer;
+}
+.emps__bank-edit-link:hover { text-decoration: underline; }
+.emps__bank-summary {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #3f5b43;
+}
+.emps__bank-summary--empty { color: #9ca3af; font-style: italic; }
+
+.emps__payment-actions { margin-top: 4px; }
+
+.emps__bank-error-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: #b91c1c;
+  line-height: 1.4;
+}
+.emps__bank-error-note .ti { flex-shrink: 0; margin-top: 1px; }
+
+.emps__mark-paid-link {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 8px;
+  border: none;
+  background: transparent;
+  padding: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #9ca3af;
+  cursor: pointer;
+}
+.emps__mark-paid-link:hover:not(:disabled) { color: #15803d; text-decoration: underline; }
+.emps__mark-paid-link:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* Reset-password modal */
 .emps__modal-backdrop {
   position: fixed;

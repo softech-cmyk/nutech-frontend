@@ -1,0 +1,107 @@
+.ded-card {
+  width: 100%;
+  max-width: 460px;
+  background: #fffaf3;
+  border: 1.5px solid #fed7aa;
+  border-radius: 14px;
+  padding: 14px 16px 16px;
+  box-shadow: 0 6px 18px rgba(194, 65, 12, 0.08);
+}
+
+.ded-card__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #9a3412;
+  margin-bottom: 12px;
+}
+.ded-card__header .ti { font-size: 17px; }
+
+.ded-card__formula {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.ded-card__formula-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: #fff;
+  border: 1px solid #fed7aa;
+  border-radius: 10px;
+  padding: 8px 10px;
+  text-align: center;
+}
+.ded-card__formula-item span {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #b45309;
+  font-weight: 600;
+}
+.ded-card__formula-item strong {
+  font-size: 0.9rem;
+  color: #7c2d12;
+  font-weight: 800;
+}
+.ded-card__formula-item--result {
+  background: #ffedd5;
+  border-color: #fb923c;
+}
+.ded-card__formula-op {
+  font-size: 15px;
+  color: #fb923c;
+  flex-shrink: 0;
+}
+
+.ded-card__items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid #fed7aa;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.ded-card__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #fff;
+  font-size: 0.83rem;
+  color: #7c2d12;
+}
+.ded-card__item:nth-child(even) { background: #fff7ed; }
+.ded-card__item strong { font-weight: 700; }
+
+.ded-card__empty {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  color: #9a3412;
+  font-style: italic;
+}
+
+.ded-card__total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 10px;
+}
+.ded-card__total span {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #7f1d1d;
+}
+.ded-card__total strong {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #b91c1c;
+}

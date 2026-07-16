@@ -129,6 +129,7 @@ const ManagerDashboard = () => {
     { id: "dashboard",  label: "Dashboard",          icon: "ti-layout-dashboard", path: "/managerdashboard" },
     { id: "employees",  label: "Employees",           icon: "ti-users",           path: "/Employees"        },
     { id: "add-employee", label: "Add Employee",     icon: "ti-user-plus",       path: "/CreateEmployee"   },
+    { id: "payroll",    label: "Payroll",             icon: "ti-report-money",    path: "/Payroll"          },
     { id: "punch",      label: "Punch Attendance",   icon: "ti-fingerprint",      path: "/PunchAttendance"  },
     { id: "live",       label: "Live Tracking",      icon: "ti-map-pin",          path: "/LiveTracking"     },
     { id: "present",    label: "Present Today",      icon: "ti-user-check",       path: "/PresentToday"     },
