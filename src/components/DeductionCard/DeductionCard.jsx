@@ -26,6 +26,12 @@ const DeductionCard = ({ p }) => {
       amount: p.absentDays * p.perDayRate,
     });
   }
+  if (p.unpaidLeaveDays) {
+    items.push({
+      label: `Unpaid leave (PWL) — ${p.unpaidLeaveDays} day${p.unpaidLeaveDays === 1 ? "" : "s"}`,
+      amount: p.unpaidLeaveDays * p.perDayRate,
+    });
+  }
   if (p.halfDays) {
     items.push({
       label: `Half-day — ${p.halfDays} × 0.5`,
@@ -41,7 +47,7 @@ const DeductionCard = ({ p }) => {
 
       <div className="ded-card__formula">
         <div className="ded-card__formula-item">
-          <span>Gross salary</span>
+          <span>CTC</span>
           <strong>{fmtMoney(p.monthlySalary)}</strong>
         </div>
         <i className="ti ti-divide ded-card__formula-op" aria-hidden="true" />
@@ -66,7 +72,7 @@ const DeductionCard = ({ p }) => {
           ))}
         </div>
       ) : (
-        <p className="ded-card__empty">No absences or half-days this month — nothing deducted.</p>
+        <p className="ded-card__empty">No absences, unpaid leave, or half-days this month — nothing deducted.</p>
       )}
 
       <div className="ded-card__total">

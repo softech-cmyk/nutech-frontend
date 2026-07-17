@@ -256,7 +256,7 @@ const CreateEmployee = () => {
             </button>
           </div>
 
-          <label className="cemp__label" htmlFor="monthlySalary">Monthly salary (gross)</label>
+          <label className="cemp__label" htmlFor="monthlySalary">Monthly salary (CTC)</label>
           <div className="cemp__field">
             <i className="ti ti-currency-rupee cemp__field-icon" aria-hidden="true" />
             <input

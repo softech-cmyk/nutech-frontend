@@ -316,13 +316,37 @@
 .emps__deduction-btn .ti { font-size: 13px; }
 
 .emps__deduction-detail { margin: -2px 0 2px; }
+
+.emps__inhand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.emps__inhand-btn:hover { text-decoration: underline; }
+.emps__inhand-btn .ti { font-size: 13px; }
+.emps__inhand-detail { margin: 8px 0 2px; }
 .emps__salary-row--net {
   background: #dcfce7;
   border-top: 1.5px solid #86efac;
   padding: 12px 14px;
 }
 .emps__salary-row--net span { font-weight: 700; color: #14532d; }
-.emps__salary-row--net strong { font-size: 1.05rem; color: #15803d; }
+.emps__salary-row--net strong,
+.emps__salary-row--net .emps__inhand-btn { font-size: 1.05rem; color: #15803d; }
+
+.emps__salary-row--finalnet {
+  background: #eff6ff;
+  border-top: 1.5px solid #93c5fd;
+  padding: 12px 14px;
+}
+.emps__salary-row--finalnet span { font-weight: 700; color: #1e3a8a; }
+.emps__salary-row--finalnet strong { font-size: 1.05rem; color: #0369a1; }
 
 .emps__salary-paid-icon { margin-left: 6px; font-size: 14px; color: #15803d; }
 
@@ -419,6 +443,47 @@
 .emps__bank-summary--empty { color: #9ca3af; font-style: italic; }
 
 .emps__payment-actions { margin-top: 4px; }
+
+/* ---------- Salary slip section ---------- */
+.emps__slip-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 12px;
+  background: #f0fdf4;
+}
+.emps__slip-title {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #14532d;
+}
+.emps__slip-sub {
+  margin: 2px 0 0;
+  font-size: 0.76rem;
+  color: #6b8f6e;
+}
+.emps__slip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 9px 16px;
+  border: none;
+  border-radius: 9px;
+  background: linear-gradient(90deg, #15803d, #22c55e);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.14s ease, box-shadow 0.18s ease;
+}
+.emps__slip-btn:hover:not(:disabled) { box-shadow: 0 10px 22px rgba(21, 128, 61, 0.32); transform: translateY(-1px); }
+.emps__slip-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .emps__bank-error-note {
   display: flex;

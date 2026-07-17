@@ -4,6 +4,8 @@ import toast from "react-hot-toast";
 import TractorLoader from "../../../components/TractorLoader/TractorLoader";
 import HomeButton from "../../../components/HomeButton/HomeButton";
 import DeductionCard from "../../../components/DeductionCard/DeductionCard";
+import InHandCard from "../../../components/InHandCard/InHandCard";
+import { downloadPayslip } from "../../../utils/payslip";
 import "./Employees.css";
 
 const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api`;
@@ -53,6 +55,8 @@ const Employees = () => {
   const [savingSalary, setSavingSalary] = useState(false);
   const [editingSalary, setEditingSalary] = useState(false);
   const [showDeductionDetail, setShowDeductionDetail] = useState(false);
+  const [showInHandDetail, setShowInHandDetail] = useState(false);
+  const [savingAdjustments, setSavingAdjustments] = useState(false);
   const [payingSalary, setPayingSalary] = useState(false);
   const [bankAccount, setBankAccount] = useState(null);
   const [bankLoading, setBankLoading] = useState(false);
@@ -174,6 +178,7 @@ const Employees = () => {
     setSalaryError("");
     setEditingSalary(false);
     setShowDeductionDetail(false);
+    setShowInHandDetail(false);
     setEditingBank(false);
     setBankError("");
     setBankAccount(null);
@@ -199,6 +204,7 @@ const Employees = () => {
     setSalaryError("");
     setEditingSalary(false);
     setShowDeductionDetail(false);
+    setShowInHandDetail(false);
     setBankAccount(null);
     setEditingBank(false);
     setBankError("");
@@ -243,7 +249,7 @@ const Employees = () => {
 
   const handleSaveSalary = async () => {
     if (salaryInput === "" || isNaN(salaryInput) || Number(salaryInput) < 0) {
-      setSalaryError("Enter a valid, non-negative salary.");
+      setSalaryError("Enter a valid, non-negative CTC.");
       return;
     }
     setSalaryError("");
@@ -257,7 +263,7 @@ const Employees = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      toast.success(`Salary updated for ${salaryTarget.name || salaryTarget.phone}.`);
+      toast.success(`CTC updated for ${salaryTarget.name || salaryTarget.phone}.`);
       setUsers((prev) => prev.map((u) => (u._id === salaryTarget._id ? { ...u, monthlySalary: data.user.monthlySalary } : u)));
       setEditingSalary(false);
       await loadPayroll(token);
@@ -268,10 +274,32 @@ const Employees = () => {
     }
   };
 
+  const handleSaveAdjustments = async (adjustments) => {
+    setSavingAdjustments(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/users/${salaryTarget._id}/salary-adjustments`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(adjustments),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      toast.success("Adjustments saved.");
+      setUsers((prev) => prev.map((u) => (u._id === salaryTarget._id ? { ...u, salaryAdjustments: data.user.salaryAdjustments } : u)));
+      await loadPayroll(token);
+    } catch (err) {
+      toast.error(err.message || "Could not save adjustments.");
+    } finally {
+      setSavingAdjustments(false);
+    }
+  };
+
   const handlePaySalary = async () => {
     const p = payroll[salaryTarget._id];
-    if (!p || p.netSalary == null) return;
-    if (!window.confirm(`Mark ${fmtMoney(p.netSalary)} as paid to ${salaryTarget.name || salaryTarget.phone} for ${fmtMonth(payrollMonth)}?`)) return;
+    const amount = p?.finalNetSalary ?? p?.netSalary;
+    if (amount == null) return;
+    if (!window.confirm(`Mark ${fmtMoney(amount)} as paid to ${salaryTarget.name || salaryTarget.phone} for ${fmtMonth(payrollMonth)}?`)) return;
 
     setPayingSalary(true);
     try {
@@ -314,8 +342,9 @@ const Employees = () => {
 
   const handlePayout = async () => {
     const p = payroll[salaryTarget._id];
-    if (!p || p.netSalary == null) return;
-    if (!window.confirm(`Send ${fmtMoney(p.netSalary)} to ${salaryTarget.name || salaryTarget.phone}'s bank account for ${fmtMonth(payrollMonth)}? This initiates a real bank transfer.`)) return;
+    const amount = p?.finalNetSalary;
+    if (amount == null) return;
+    if (!window.confirm(`Send ${fmtMoney(amount)} to ${salaryTarget.name || salaryTarget.phone}'s bank account for ${fmtMonth(payrollMonth)}? This initiates a real bank transfer.`)) return;
 
     const token = localStorage.getItem("token");
     setInitiatingPayout(true);
@@ -333,6 +362,11 @@ const Employees = () => {
       await loadPayroll(token);
       setInitiatingPayout(false);
     }
+  };
+
+  const handleDownloadPayslip = () => {
+    const p = payroll[salaryTarget._id];
+    downloadPayslip({ user: salaryTarget, payroll: p, month: payrollMonth, bankAccount });
   };
 
   return (
@@ -467,7 +501,7 @@ const Employees = () => {
                   <td>{u.createdAt ? formatDate(u.createdAt) : "—"}</td>
                   <td>
                     <button className="emps__salary-link" onClick={() => openSalaryModal(u)}>
-                      {fmtMoney(payroll[u._id]?.netSalary ?? u.monthlySalary)}
+                      {fmtMoney(payroll[u._id]?.finalNetSalary ?? payroll[u._id]?.netSalary ?? u.monthlySalary)}
                       {payroll[u._id]?.paid && <i className="ti ti-circle-check emps__salary-paid-icon" aria-hidden="true" title="Paid this month" />}
                     </button>
                   </td>
@@ -543,9 +577,9 @@ const Employees = () => {
               <div className="emps__modal-icon">
                 <i className="ti ti-currency-rupee" aria-hidden="true" />
               </div>
-              <h3 className="emps__modal-title">Salary — {salaryTarget.name || salaryTarget.phone}</h3>
+              <h3 className="emps__modal-title">CTC — {salaryTarget.name || salaryTarget.phone}</h3>
               <p className="emps__modal-sub">
-                {p ? fmtMonth(payrollMonth) : "Set this employee's gross monthly salary."}
+                {p ? fmtMonth(payrollMonth) : "Set this employee's monthly CTC."}
               </p>
 
               {editingSalary ? (
@@ -555,9 +589,10 @@ const Employees = () => {
                       type="number"
                       min="0"
                       step="1"
-                      placeholder="Gross monthly salary"
+                      placeholder="Monthly CTC"
                       value={salaryInput}
                       onChange={(e) => setSalaryInput(e.target.value)}
+                      autoFocus
                     />
                   </div>
                   {salaryError && <p className="emps__modal-error">{salaryError}</p>}
@@ -566,7 +601,7 @@ const Employees = () => {
                       Cancel
                     </button>
                     <button className="emps__modal-confirm" onClick={handleSaveSalary} disabled={savingSalary}>
-                      {savingSalary ? "Saving…" : "Save salary"}
+                      {savingSalary ? "Saving…" : "Save CTC"}
                     </button>
                   </div>
                 </>
@@ -574,9 +609,31 @@ const Employees = () => {
                 <>
                   <div className="emps__salary-grid">
                     <div className="emps__salary-row emps__salary-row--gross">
-                      <span>Gross salary</span>
+                      <span>CTC</span>
                       <strong>{fmtMoney(p?.monthlySalary ?? salaryTarget.monthlySalary)}</strong>
                     </div>
+                    <div className="emps__salary-row emps__salary-row--net">
+                      <span>In-hand salary</span>
+                      <button
+                        type="button"
+                        className="emps__inhand-btn"
+                        onClick={() => setShowInHandDetail((s) => !s)}
+                        aria-expanded={showInHandDetail}
+                      >
+                        {fmtMoney(p?.netSalary ?? salaryTarget.monthlySalary)}
+                        <i className={`ti ${showInHandDetail ? "ti-chevron-up" : "ti-chevron-down"}`} aria-hidden="true" />
+                      </button>
+                    </div>
+                    {showInHandDetail && (
+                      <div className="emps__inhand-detail">
+                        <InHandCard
+                          netSalary={p?.netSalary ?? salaryTarget.monthlySalary}
+                          adjustments={salaryTarget.salaryAdjustments}
+                          onSave={handleSaveAdjustments}
+                          saving={savingAdjustments}
+                        />
+                      </div>
+                    )}
                     <div className="emps__salary-row">
                       <span>Working days this month</span>
                       <strong>{p?.workingDaysInMonth ?? "—"}</strong>
@@ -597,8 +654,12 @@ const Employees = () => {
                       <span>Approved leave (paid)</span>
                       <strong>{p?.paidLeaveDays ?? "—"}</strong>
                     </div>
+                    <div className="emps__salary-row">
+                      <span>Unpaid leave (PWL)</span>
+                      <strong>{p?.unpaidLeaveDays ?? "—"}</strong>
+                    </div>
                     <div className="emps__salary-row emps__salary-row--deduction">
-                      <span>Deduction (half-days + absents)</span>
+                      <span>Deduction (half-days + absents + PWL)</span>
                       <button
                         type="button"
                         className="emps__deduction-btn"
@@ -614,9 +675,9 @@ const Employees = () => {
                         <DeductionCard p={p} />
                       </div>
                     )}
-                    <div className="emps__salary-row emps__salary-row--net">
-                      <span>Net salary</span>
-                      <strong>{fmtMoney(p?.netSalary ?? salaryTarget.monthlySalary)}</strong>
+                    <div className="emps__salary-row emps__salary-row--finalnet">
+                      <span>Net Salary</span>
+                      <strong>{fmtMoney(p?.finalNetSalary ?? p?.netSalary ?? salaryTarget.monthlySalary)}</strong>
                     </div>
                   </div>
 
@@ -678,7 +739,7 @@ const Employees = () => {
                     )}
                   </div>
 
-                  {p?.netSalary != null && !editingBank && (
+                  {(p?.finalNetSalary != null || p?.netSalary != null) && !editingBank && (
                     <div className="emps__payment-actions">
                       {p.payoutStatus === "processing" || p.payoutStatus === "queued" ? (
                         <div className="emps__paid-banner emps__paid-banner--pending">
@@ -718,7 +779,7 @@ const Employees = () => {
                             title={!bankAccount ? "Add bank details first" : undefined}
                           >
                             <i className="ti ti-building-bank" aria-hidden="true" />
-                            {initiatingPayout ? "Sending…" : `Pay ${fmtMoney(p.netSalary)} via bank transfer`}
+                            {initiatingPayout ? "Sending…" : `Pay ${fmtMoney(p.finalNetSalary ?? p.netSalary)} via bank transfer`}
                           </button>
                           <button type="button" className="emps__mark-paid-link" onClick={handlePaySalary} disabled={payingSalary}>
                             or mark as paid manually
@@ -728,12 +789,27 @@ const Employees = () => {
                     </div>
                   )}
 
+                  <div className="emps__slip-section">
+                    <div>
+                      <span className="emps__slip-title">Salary Slip</span>
+                      <p className="emps__slip-sub">{p ? fmtMonth(payrollMonth) : "Set a CTC to generate a slip."}</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="emps__slip-btn"
+                      onClick={handleDownloadPayslip}
+                      disabled={!p && salaryTarget.monthlySalary == null}
+                    >
+                      <i className="ti ti-file-download" aria-hidden="true" /> Download
+                    </button>
+                  </div>
+
                   <div className="emps__modal-actions">
                     <button className="emps__modal-cancel" onClick={closeSalaryModal}>
                       Close
                     </button>
                     <button className="emps__modal-confirm" onClick={() => setEditingSalary(true)}>
-                      Edit salary
+                      Edit CTC
                     </button>
                   </div>
                 </>
