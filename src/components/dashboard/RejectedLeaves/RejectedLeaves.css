@@ -264,6 +264,18 @@ tbody tr:hover {
   box-shadow: 0 8px 18px rgba(21, 128, 61, 0.22);
 }
 
+.leave-halfday-badge {
+  display: inline-block;
+  margin-left: 6px;
+  background: rgba(251, 146, 60, 0.14);
+  border: 1px solid rgba(251, 146, 60, 0.35);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #c2410c;
+}
+
 @media (max-width: 800px) {
   .rejected-leaves { padding: 20px; }
   .header-section { flex-direction: column; gap: 20px; }

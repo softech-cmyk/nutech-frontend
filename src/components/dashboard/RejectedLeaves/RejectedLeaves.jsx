@@ -108,7 +108,10 @@ const RejectedLeaves = () => {
                     </td>
                     <td style={{ textTransform: "capitalize" }}>{l.userId?.role || "—"}</td>
                     <td>{l.userId?.department || "—"}</td>
-                    <td><span className="leave-type">{l.leaveType}</span></td>
+                    <td>
+                      <span className="leave-type">{l.leaveType}</span>
+                      {l.isHalfDay && <span className="leave-halfday-badge">Half Day</span>}
+                    </td>
                     <td>{l.startDate}{l.startDate !== l.endDate ? ` → ${l.endDate}` : ""}</td>
                     <td>{l.reason}</td>
                     <td>

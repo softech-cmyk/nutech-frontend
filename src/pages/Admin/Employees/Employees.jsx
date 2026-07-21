@@ -35,6 +35,7 @@ const fmtDate = (iso) =>
 
 const Employees = () => {
   const navigate = useNavigate();
+  const currentUserId = JSON.parse(localStorage.getItem("user") || "null")?.id;
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -65,6 +66,9 @@ const Employees = () => {
   const [bankError, setBankError] = useState("");
   const [savingBank, setSavingBank] = useState(false);
   const [initiatingPayout, setInitiatingPayout] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   const loadPayroll = async (token) => {
     try {
@@ -369,6 +373,37 @@ const Employees = () => {
     downloadPayslip({ user: salaryTarget, payroll: p, month: payrollMonth, bankAccount });
   };
 
+  const openDeleteModal = (user) => {
+    setDeleteTarget(user);
+    setDeleteConfirmText("");
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteTarget(null);
+    setDeleteConfirmText("");
+  };
+
+  const handleDeleteEmployee = async () => {
+    if (deleteConfirmText.trim().toUpperCase() !== "DELETE") return;
+    setDeleting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/users/${deleteTarget._id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      toast.success(data.message);
+      setUsers((prev) => prev.filter((u) => u._id !== deleteTarget._id));
+      closeDeleteModal();
+    } catch (err) {
+      toast.error(err.message || "Could not delete employee.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="emps">
       <HomeButton />
@@ -506,9 +541,16 @@ const Employees = () => {
                     </button>
                   </td>
                   <td>
-                    <button className="emps__reset-btn" onClick={() => openResetModal(u)}>
-                      <i className="ti ti-key" aria-hidden="true" /> Reset password
-                    </button>
+                    <div className="emps__actions-cell">
+                      <button className="emps__reset-btn" onClick={() => openResetModal(u)}>
+                        <i className="ti ti-key" aria-hidden="true" /> Reset password
+                      </button>
+                      {u._id !== currentUserId && (
+                        <button className="emps__delete-btn" onClick={() => openDeleteModal(u)} title="Delete employee">
+                          <i className="ti ti-trash" aria-hidden="true" />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -563,6 +605,44 @@ const Employees = () => {
               </button>
               <button className="emps__modal-confirm" onClick={handleResetPassword} disabled={resetting}>
                 {resetting ? "Resetting…" : "Reset password"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className="emps__modal-backdrop" onClick={closeDeleteModal}>
+          <div className="emps__modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="emps__modal-icon emps__modal-icon--danger">
+              <i className="ti ti-trash" aria-hidden="true" />
+            </div>
+            <h3 className="emps__modal-title">Delete employee</h3>
+            <p className="emps__modal-sub">
+              This permanently deletes <strong>{deleteTarget.name || deleteTarget.phone}</strong> along with{" "}
+              <strong>all</strong> of their attendance, leave, and payroll history. This cannot be undone.
+            </p>
+
+            <div className="emps__modal-field">
+              <input
+                type="text"
+                placeholder={`Type DELETE to confirm`}
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                autoFocus
+              />
+            </div>
+
+            <div className="emps__modal-actions">
+              <button className="emps__modal-cancel" onClick={closeDeleteModal} disabled={deleting}>
+                Cancel
+              </button>
+              <button
+                className="emps__modal-danger"
+                onClick={handleDeleteEmployee}
+                disabled={deleting || deleteConfirmText.trim().toUpperCase() !== "DELETE"}
+              >
+                {deleting ? "Deleting…" : "Delete employee"}
               </button>
             </div>
           </div>

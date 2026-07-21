@@ -148,7 +148,10 @@ const LeavesApplied = () => {
                       </div>
                     </td>
                     <td style={{ textTransform: "capitalize" }}>{l.userId?.role || "—"}</td>
-                    <td><span className="la__type-badge">{l.leaveType}</span></td>
+                    <td>
+                      <span className="la__type-badge">{l.leaveType}</span>
+                      {l.isHalfDay && <span className="la__halfday-badge">Half Day</span>}
+                    </td>
                     <td>{l.startDate}{l.startDate !== l.endDate ? ` → ${l.endDate}` : ""}</td>
                     <td className="la__reason">{l.reason}</td>
                     <td>
