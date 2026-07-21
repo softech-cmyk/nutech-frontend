@@ -6,6 +6,12 @@ import "./AcceptedLeaves.css";
 
 const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api`;
 
+const halfDayLabel = (l) => {
+  if (!l.isHalfDay) return null;
+  const session = l.halfDaySession === "first-half" ? "First Half" : "Second Half";
+  return l.halfDayTime ? `${session}, ${l.halfDayTime}` : session;
+};
+
 const AcceptedLeaves = () => {
   const navigate              = useNavigate();
   const user                  = JSON.parse(localStorage.getItem("user") || "null");
@@ -128,7 +134,7 @@ const AcceptedLeaves = () => {
                     <td style={{ textTransform: "capitalize" }}>{l.userId?.role || "—"}</td>
                     <td>
                       <span className="al__type">{l.leaveType}</span>
-                      {l.isHalfDay && <span className="al__halfday-badge">Half Day</span>}
+                      {l.isHalfDay && <span className="al__halfday-badge">{halfDayLabel(l)}</span>}
                     </td>
                     <td>{l.startDate}{l.startDate !== l.endDate ? ` → ${l.endDate}` : ""}</td>
                     <td>{l.reason}</td>

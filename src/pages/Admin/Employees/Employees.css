@@ -282,6 +282,66 @@
 }
 .emps__delete-btn:hover { background: rgba(185, 28, 28, 0.18); transform: translateY(-1px); }
 
+.emps__phone-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  color: #1a2e1c;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.emps__phone-btn:hover { text-decoration: underline; }
+.emps__phone-btn .ti {
+  font-size: 12px;
+  color: #86efac;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.emps__phone-btn:hover .ti { opacity: 1; color: #15803d; }
+
+.emps__phone-edit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.emps__phone-cc {
+  font-size: 0.85rem;
+  color: #6b8f6e;
+  flex-shrink: 0;
+}
+.emps__phone-input {
+  width: 110px;
+  padding: 5px 8px;
+  border: 1.5px solid #22c55e;
+  border-radius: 7px;
+  font-size: 0.9rem;
+  color: #14532d;
+  background: #fff;
+}
+.emps__phone-input:focus { outline: none; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18); }
+.emps__phone-save,
+.emps__phone-cancel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.emps__phone-save { background: #dcfce7; color: #15803d; }
+.emps__phone-save:hover:not(:disabled) { background: #bbf7d0; }
+.emps__phone-cancel { background: #fee2e2; color: #b91c1c; }
+.emps__phone-cancel:hover:not(:disabled) { background: #fecaca; }
+.emps__phone-save:disabled,
+.emps__phone-cancel:disabled { opacity: 0.5; cursor: not-allowed; }
+
 .emps__salary-link {
   border: none;
   background: transparent;

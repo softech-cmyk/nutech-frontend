@@ -6,6 +6,12 @@ import "./LeavesApplied.css";
 
 const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api`;
 
+const halfDayLabel = (l) => {
+  if (!l.isHalfDay) return null;
+  const session = l.halfDaySession === "first-half" ? "First Half" : "Second Half";
+  return l.halfDayTime ? `${session}, ${l.halfDayTime}` : session;
+};
+
 const LeavesApplied = () => {
   const navigate              = useNavigate();
   const [leaves, setLeaves]   = useState([]);
@@ -150,7 +156,7 @@ const LeavesApplied = () => {
                     <td style={{ textTransform: "capitalize" }}>{l.userId?.role || "—"}</td>
                     <td>
                       <span className="la__type-badge">{l.leaveType}</span>
-                      {l.isHalfDay && <span className="la__halfday-badge">Half Day</span>}
+                      {l.isHalfDay && <span className="la__halfday-badge">{halfDayLabel(l)}</span>}
                     </td>
                     <td>{l.startDate}{l.startDate !== l.endDate ? ` → ${l.endDate}` : ""}</td>
                     <td className="la__reason">{l.reason}</td>

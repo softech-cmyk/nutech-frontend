@@ -19,6 +19,8 @@ const LeaveApplicationButton = () => {
   const [submitted, setSubmitted]   = useState(false);
   const [leaveType, setLeaveType]   = useState("CL");
   const [isHalfDay, setIsHalfDay]   = useState(false);
+  const [halfDaySession, setHalfDaySession] = useState("first-half");
+  const [halfDayTime, setHalfDayTime] = useState("");
   const [error, setError]           = useState("");
   const [clUsed, setClUsed]         = useState(0);
 
@@ -51,6 +53,7 @@ const LeaveApplicationButton = () => {
     if (!reason.trim() || !startDate || !endDate) { setError("Please fill in all fields."); return; }
     if (startDate > endDate) { setError("Start date must be on or before end date."); return; }
     if (isHalfDay && startDate !== endDate) { setError("A half-day leave must be for a single date."); return; }
+    if (isHalfDay && !halfDaySession) { setError("Select first half or second half."); return; }
     if (leaveType === "CL" && clQuotaReached) {
       setError(`You've used all ${CL_ANNUAL_QUOTA} Casual Leave (CL) days for this year.`);
       return;
@@ -61,7 +64,15 @@ const LeaveApplicationButton = () => {
       const res  = await fetch(`${API}/leaves/apply`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ leaveType, reason, startDate, endDate: isHalfDay ? startDate : endDate, isHalfDay }),
+        body: JSON.stringify({
+          leaveType,
+          reason,
+          startDate,
+          endDate: isHalfDay ? startDate : endDate,
+          isHalfDay,
+          halfDaySession: isHalfDay ? halfDaySession : undefined,
+          halfDayTime: isHalfDay && halfDayTime ? halfDayTime : undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
@@ -73,6 +84,8 @@ const LeaveApplicationButton = () => {
         setEndDate(todayStr());
         setLeaveType("CL");
         setIsHalfDay(false);
+        setHalfDaySession("first-half");
+        setHalfDayTime("");
         setSubmitted(false);
       }, 2500);
     } catch (err) {
@@ -175,6 +188,38 @@ const LeaveApplicationButton = () => {
               <span>Half Day (single date only, counts as 0.5 day)</span>
             </label>
           </div>
+
+          {isHalfDay && (
+            <div className="form-group">
+              <label className="form-label">Which half</label>
+              <div className="leave-session-options">
+                <button
+                  type="button"
+                  className={`leave-pill ${halfDaySession === "first-half" ? "active" : ""}`}
+                  onClick={() => setHalfDaySession("first-half")}
+                >
+                  First Half (arriving late)
+                </button>
+                <button
+                  type="button"
+                  className={`leave-pill ${halfDaySession === "second-half" ? "active" : ""}`}
+                  onClick={() => setHalfDaySession("second-half")}
+                >
+                  Second Half (leaving early)
+                </button>
+              </div>
+
+              <label className="form-label leave-time-label">
+                {halfDaySession === "first-half" ? "Arriving at (optional)" : "Leaving at (optional)"}
+              </label>
+              <input
+                type="time"
+                className="leave-time-input"
+                value={halfDayTime}
+                onChange={(e) => setHalfDayTime(e.target.value)}
+              />
+            </div>
+          )}
 
           {!isHalfDay && (
             <div className="form-group">

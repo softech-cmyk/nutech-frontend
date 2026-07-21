@@ -69,6 +69,9 @@ const Employees = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [editingPhoneId, setEditingPhoneId] = useState(null);
+  const [phoneInput, setPhoneInput] = useState("");
+  const [savingPhone, setSavingPhone] = useState(false);
 
   const loadPayroll = async (token) => {
     try {
@@ -404,6 +407,41 @@ const Employees = () => {
     }
   };
 
+  const startEditPhone = (u) => {
+    setEditingPhoneId(u._id);
+    setPhoneInput(u.phone || "");
+  };
+
+  const cancelEditPhone = () => {
+    setEditingPhoneId(null);
+    setPhoneInput("");
+  };
+
+  const savePhone = async (u) => {
+    if (!/^[0-9]{10}$/.test(phoneInput)) {
+      toast.error("Enter a valid 10-digit phone number.");
+      return;
+    }
+    setSavingPhone(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/users/${u._id}/phone`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ phone: phoneInput, countryCode: u.countryCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      toast.success("Phone number updated.");
+      setUsers((prev) => prev.map((x) => (x._id === u._id ? { ...x, phone: data.user.phone } : x)));
+      setEditingPhoneId(null);
+    } catch (err) {
+      toast.error(err.message || "Could not update phone number.");
+    } finally {
+      setSavingPhone(false);
+    }
+  };
+
   return (
     <div className="emps">
       <HomeButton />
@@ -527,7 +565,38 @@ const Employees = () => {
                       <span className="emps__name">{u.name || "—"}</span>
                     </div>
                   </td>
-                  <td>{u.countryCode} {u.phone}</td>
+                  <td>
+                    {editingPhoneId === u._id ? (
+                      <div className="emps__phone-edit">
+                        <span className="emps__phone-cc">{u.countryCode}</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={10}
+                          className="emps__phone-input"
+                          value={phoneInput}
+                          onChange={(e) => setPhoneInput(e.target.value.replace(/\D/g, ""))}
+                          disabled={savingPhone}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") savePhone(u);
+                            if (e.key === "Escape") cancelEditPhone();
+                          }}
+                        />
+                        <button type="button" className="emps__phone-save" onClick={() => savePhone(u)} disabled={savingPhone} title="Save">
+                          <i className="ti ti-check" aria-hidden="true" />
+                        </button>
+                        <button type="button" className="emps__phone-cancel" onClick={cancelEditPhone} disabled={savingPhone} title="Cancel">
+                          <i className="ti ti-x" aria-hidden="true" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button type="button" className="emps__phone-btn" onClick={() => startEditPhone(u)} title="Edit phone number">
+                        {u.countryCode} {u.phone}
+                        <i className="ti ti-pencil" aria-hidden="true" />
+                      </button>
+                    )}
+                  </td>
                   <td>{u.department || "—"}</td>
                   <td>{u.company || "—"}</td>
                   <td>
