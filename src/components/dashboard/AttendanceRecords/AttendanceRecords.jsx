@@ -502,6 +502,13 @@ const AttendanceRecords = () => {
     [records, filterType]
   );
 
+  // The Today tab is meant to show who's actually present, not every record
+  // for the date — so absent entries (from manual regularization) are excluded.
+  const displayRecords = useMemo(
+    () => (filterType === "today" ? records.filter((r) => r.status !== "absent") : records),
+    [records, filterType]
+  );
+
   // Human-readable label for the currently active filter, used in export file names.
   const periodLabel = () => {
     if (filterType === "today") return new Date().toISOString().slice(0, 10);
@@ -512,11 +519,11 @@ const AttendanceRecords = () => {
   };
 
   const handleExportCombined = () => {
-    exportCombinedSheet(records, `attendance-${periodLabel()}.xlsx`);
+    exportCombinedSheet(displayRecords, `attendance-${periodLabel()}.xlsx`);
   };
 
   const handleExportEmployeeWise = () => {
-    exportEmployeeWiseWorkbook(records, `attendance-by-employee-${periodLabel()}.xlsx`);
+    exportEmployeeWiseWorkbook(displayRecords, `attendance-by-employee-${periodLabel()}.xlsx`);
   };
 
   const handleExportEmployee = (group) => {
@@ -577,7 +584,7 @@ const AttendanceRecords = () => {
             <button
               className="ar__export-btn"
               onClick={handleExportCombined}
-              disabled={records.length === 0}
+              disabled={displayRecords.length === 0}
               title="One sheet, every record currently shown"
             >
               <i className="ti ti-file-spreadsheet" /> Export (Combined)
@@ -585,7 +592,7 @@ const AttendanceRecords = () => {
             <button
               className="ar__export-btn ar__export-btn--alt"
               onClick={handleExportEmployeeWise}
-              disabled={records.length === 0}
+              disabled={displayRecords.length === 0}
               title="One sheet per employee, with Present/Half-day/Total-hours totals"
             >
               <i className="ti ti-users" /> Export (By Employee)
@@ -683,7 +690,7 @@ const AttendanceRecords = () => {
         <div className="present-table-wrap">
           {loading ? (
             <p className="ar__loading">Loading records...</p>
-          ) : records.length === 0 ? (
+          ) : displayRecords.length === 0 ? (
             <p className="ar__empty">No attendance records found.</p>
           ) : filterType === "month" ? (
             <div className="ar__groups">
@@ -820,7 +827,7 @@ const AttendanceRecords = () => {
                 </tr>
               </thead>
               <tbody>
-                {records.map((rec, i) => {
+                {displayRecords.map((rec, i) => {
                   const rowClass =
                     rec.status === "present" ? "present-row" :
                     rec.status === "half-day" ? "half-day-row" : "absent-row";
