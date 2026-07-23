@@ -195,7 +195,7 @@ const exportCombinedSheet = async (records, fileName) => {
     const subtotal = sheet.addRow({
       name: `${group.name} — Total`,
       company: group.company,
-      date: "",
+      date: { formula: `"Total Days: "&ROWS(C${firstRow}:C${lastRow})` },
       in: { formula: `"Present: "&COUNTIF(G${firstRow}:G${lastRow},"Present")` },
       out: { formula: `"Absent: "&COUNTIF(G${firstRow}:G${lastRow},"Absent")` },
       hours: { formula: `SUM(F${firstRow}:F${lastRow})` },
