@@ -40,6 +40,7 @@ const groupRecordsByEmployee = (records) => {
         company: rec.company || "—",
         presentCount: 0,
         halfDayCount: 0,
+        absentCount: 0,
         totalMinutes: 0,
         days: [],
       });
@@ -47,6 +48,7 @@ const groupRecordsByEmployee = (records) => {
     const group = byUser.get(id);
     if (rec.status === "present") group.presentCount += 1;
     else if (rec.status === "half-day") group.halfDayCount += 1;
+    else if (rec.status === "absent") group.absentCount += 1;
     group.totalMinutes += rec.totalMinutes || 0;
     group.days.push(rec);
   }
@@ -70,11 +72,84 @@ const triggerDownload = async (workbook, fileName) => {
   URL.revokeObjectURL(url);
 };
 
+// One row per employee — present/half/absent day counts and total hours,
+// computed independently from the flat detail rows rather than read off them,
+// so it stands on its own as a checkable total. Placed as the first sheet so
+// it's the first thing anyone opening the export sees.
+const addSummarySheet = (workbook, records) => {
+  const sheet = workbook.addWorksheet("Summary", { views: [{ state: "frozen", ySplit: 1 }] });
+  sheet.columns = [
+    { header: "Name",         key: "name",    width: 26 },
+    { header: "Company",      key: "company", width: 22 },
+    { header: "Present Days", key: "present", width: 14 },
+    { header: "Half Days",    key: "half",    width: 12 },
+    { header: "Absent Days",  key: "absent",  width: 14 },
+    { header: "Total Days",   key: "total",   width: 12 },
+    { header: "Total Hours",  key: "hours",   width: 14 },
+  ];
+
+  const headerRow = sheet.getRow(1);
+  headerRow.height = 26;
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF15803D" } };
+    cell.alignment = { vertical: "middle", horizontal: "center" };
+  });
+
+  const groups = groupRecordsByEmployee(records);
+  groups.forEach((g, idx) => {
+    const row = sheet.addRow({
+      name: g.name,
+      company: g.company,
+      present: g.presentCount,
+      half: g.halfDayCount,
+      absent: g.absentCount,
+      total: g.presentCount + g.halfDayCount + g.absentCount,
+      hours: toHours(g.totalMinutes),
+    });
+    row.getCell(7).numFmt = "0.00";
+    row.eachCell((cell) => {
+      cell.alignment = { vertical: "middle", horizontal: "center" };
+      cell.border = { bottom: { style: "thin", color: { argb: "FFDCFCE7" } } };
+      if (idx % 2 === 1) cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF0FDF4" } };
+    });
+    row.getCell(1).alignment = { vertical: "middle", horizontal: "left" };
+    row.getCell(1).font = { bold: true, color: { argb: "FF14532D" } };
+  });
+
+  if (groups.length > 0) {
+    const firstDataRow = 2;
+    const lastDataRow  = sheet.rowCount;
+    const totalsRow = sheet.addRow({
+      name: "TOTAL",
+      company: `${groups.length} employee${groups.length === 1 ? "" : "s"}`,
+      present: { formula: `SUM(C${firstDataRow}:C${lastDataRow})` },
+      half:    { formula: `SUM(D${firstDataRow}:D${lastDataRow})` },
+      absent:  { formula: `SUM(E${firstDataRow}:E${lastDataRow})` },
+      total:   { formula: `SUM(F${firstDataRow}:F${lastDataRow})` },
+      hours:   { formula: `SUM(G${firstDataRow}:G${lastDataRow})` },
+    });
+    totalsRow.height = 22;
+    totalsRow.getCell(7).numFmt = "0.00";
+    totalsRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FF14532D" } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDCFCE7" } };
+      cell.border = { top: { style: "medium", color: { argb: "FF15803D" } } };
+      cell.alignment = { vertical: "middle", horizontal: "center" };
+    });
+    totalsRow.getCell(1).alignment = { vertical: "middle", horizontal: "left" };
+  }
+
+  return sheet;
+};
+
 // One flat sheet, every record as its own row — good for a quick company-wide dump.
 const exportCombinedSheet = async (records, fileName) => {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "AttendEase";
   workbook.created = new Date();
+
+  addSummarySheet(workbook, records);
 
   const sheet = workbook.addWorksheet("Attendance");
   sheet.columns = [
@@ -92,25 +167,48 @@ const exportCombinedSheet = async (records, fileName) => {
   headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF15803D" } };
   headerRow.alignment = { vertical: "middle" };
 
-  const sorted = [...records].sort((a, b) => {
-    const an = a.userId?.name || a.userId?.phone || "";
-    const bn = b.userId?.name || b.userId?.phone || "";
-    return an.localeCompare(bn) || a.date.localeCompare(b.date);
-  });
+  // Grouped by employee (each already sorted by date) rather than one flat
+  // sort, so a subtotal row can be dropped in right after each employee's
+  // block — a running total the reader never has to compute by hand.
+  const groups = groupRecordsByEmployee(records);
 
-  sorted.forEach((rec) => {
-    const row = sheet.addRow({
-      name: rec.userId?.name || rec.userId?.phone || "—",
-      company: rec.company || "—",
-      date: rec.date,
-      in: fmtTime(rec.punchIn),
-      out: fmtTime(rec.punchOut),
-      hours: fmtMins(rec.totalMinutes),
-      status: STATUS_LABEL[rec.status] || rec.status,
+  groups.forEach((group) => {
+    const firstRow = sheet.rowCount + 1;
+
+    group.days.forEach((rec) => {
+      const row = sheet.addRow({
+        name: rec.userId?.name || rec.userId?.phone || group.name,
+        company: rec.company || group.company,
+        date: rec.date,
+        in: fmtTime(rec.punchIn),
+        out: fmtTime(rec.punchOut),
+        hours: toHours(rec.totalMinutes),
+        status: STATUS_LABEL[rec.status] || rec.status,
+      });
+      row.getCell(6).numFmt = "0.00";
+      const statusCell = row.getCell(7);
+      statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: STATUS_FILL[rec.status] || "FFF3F4F6" } };
+      statusCell.font = { bold: true, color: { argb: STATUS_FONT[rec.status] || "FF374151" } };
     });
-    const statusCell = row.getCell(7);
-    statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: STATUS_FILL[rec.status] || "FFF3F4F6" } };
-    statusCell.font = { bold: true, color: { argb: STATUS_FONT[rec.status] || "FF374151" } };
+
+    const lastRow = sheet.rowCount;
+    const subtotal = sheet.addRow({
+      name: `${group.name} — Total`,
+      company: group.company,
+      date: "",
+      in: { formula: `"Present: "&COUNTIF(G${firstRow}:G${lastRow},"Present")` },
+      out: { formula: `"Absent: "&COUNTIF(G${firstRow}:G${lastRow},"Absent")` },
+      hours: { formula: `SUM(F${firstRow}:F${lastRow})` },
+      status: { formula: `"Half Day: "&COUNTIF(G${firstRow}:G${lastRow},"Half Day")` },
+    });
+    subtotal.getCell(6).numFmt = "0.00";
+    subtotal.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FF14532D" } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDCFCE7" } };
+      cell.border = { top: { style: "thin", color: { argb: "FF15803D" } }, bottom: { style: "medium", color: { argb: "FF15803D" } } };
+    });
+
+    sheet.addRow({}); // spacer row between employees
   });
 
   await triggerDownload(workbook, fileName);
