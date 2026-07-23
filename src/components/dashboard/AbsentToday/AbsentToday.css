@@ -237,6 +237,162 @@
   box-shadow: 0 8px 20px rgba(3, 105, 161, 0.28);
 }
 
+.absent__action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(21, 128, 61, 0.10);
+  border: 1px solid rgba(21, 128, 61, 0.28);
+  border-radius: 8px;
+  padding: 7px 13px;
+  color: var(--nt-green-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.12s;
+  white-space: nowrap;
+}
+.absent__action-btn:hover {
+  background: rgba(21, 128, 61, 0.2);
+  transform: translateY(-1px);
+}
+
+/* ---------- Modals (Mark Attendance / Change Status) ---------- */
+.absent__modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 16px;
+}
+.absent__modal-card {
+  width: min(420px, 100%);
+  background: #fff;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  box-shadow: 0 24px 60px rgba(21, 128, 61, 0.18);
+  padding: 24px;
+  text-align: center;
+}
+.absent__modal-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: rgba(21, 128, 61, 0.12);
+  color: var(--nt-green-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+.absent__modal-title {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+  color: var(--nt-green-deep);
+}
+.absent__modal-sub {
+  margin: 0 0 16px;
+  font-size: 0.85rem;
+  color: #5b6b74;
+  line-height: 1.4;
+}
+.absent__modal-field {
+  margin-bottom: 12px;
+  text-align: left;
+}
+.absent__modal-field textarea,
+.absent__modal-field input[type="time"] {
+  width: 100%;
+  border: 2px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  color: var(--nt-green-deep);
+  background: #f0fdf4;
+  font-family: inherit;
+  resize: vertical;
+}
+.absent__modal-field textarea:focus,
+.absent__modal-field input[type="time"]:focus {
+  outline: none;
+  border-color: #22c55e;
+}
+.absent__modal-label {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--nt-green-dark);
+}
+.absent__modal-status-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.absent__modal-status {
+  flex: 1;
+  padding: 9px 8px;
+  border: 2px solid #bbf7d0;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--nt-green-deep);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.absent__modal-status:hover { border-color: #86efac; }
+.absent__modal-status--active {
+  background: linear-gradient(90deg, var(--nt-green-dark), var(--nt-green-mid));
+  border-color: transparent;
+  color: #fff;
+}
+.absent__modal-error {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  color: #b91c1c;
+  text-align: left;
+}
+.absent__modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+.absent__modal-cancel,
+.absent__modal-confirm {
+  border: none;
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.absent__modal-cancel {
+  background: rgba(0, 0, 0, 0.06);
+  color: #333;
+}
+.absent__modal-confirm {
+  background: linear-gradient(135deg, var(--nt-green-dark), #22c55e);
+  color: #fff;
+}
+.absent__modal-cancel:hover:not(:disabled),
+.absent__modal-confirm:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+.absent__modal-cancel:disabled,
+.absent__modal-confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 @media (max-width: 800px) {
   .absent-today { padding: 1.5rem; }
   .present-table-container { padding: 1.2rem; }
