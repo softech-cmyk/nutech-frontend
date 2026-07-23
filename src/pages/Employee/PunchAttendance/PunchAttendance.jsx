@@ -31,24 +31,33 @@ const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const MAP_STYLE = { width: "100%", height: "260px", borderRadius: "16px" };
 
+// Resolves { coords, reason } — coords is null on failure, and reason explains
+// why (so the UI can tell the employee something actionable instead of just
+// silently punching them in with no location on record).
 const getLocation = () =>
   new Promise((resolve) => {
-    if (!navigator.geolocation) { resolve(null); return; }
+    if (!navigator.geolocation) { resolve({ coords: null, reason: "unsupported" }); return; }
     navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) => resolve({ coords: { lat: pos.coords.latitude, lng: pos.coords.longitude }, reason: null }),
       () => {
         // A fresh high-accuracy fix can fail or time out on back-to-back
         // punches (common for punch-out right after punch-in) — fall back to
         // a coarser, faster lookup rather than sending no location at all.
         navigator.geolocation.getCurrentPosition(
-          (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-          () => resolve(null),
+          (pos) => resolve({ coords: { lat: pos.coords.latitude, lng: pos.coords.longitude }, reason: null }),
+          (err) => resolve({ coords: null, reason: err.code === 1 ? "denied" : "unavailable" }),
           { timeout: 8000, enableHighAccuracy: false, maximumAge: 60000 }
         );
       },
       { timeout: 8000, enableHighAccuracy: true, maximumAge: 30000 }
     );
   });
+
+const LOCATION_WARNINGS = {
+  unsupported: "This browser doesn't support location — your manager won't be able to verify where you punched in from.",
+  denied: "Location permission is blocked for this site. Enable it in your browser's site settings so your manager can verify your location.",
+  unavailable: "Couldn't get a location fix (weak GPS signal or timeout) — your punch was still recorded, but without a location.",
+};
 
 const reverseGeocode = async (lat, lng) => {
   try {
@@ -77,6 +86,7 @@ const PunchAttendance = () => {
   const [dayStatus, setDayStatus]     = useState(null); // "present" | "half-day"
   const [lateNotice, setLateNotice]   = useState(null);
   const [error, setError]             = useState("");
+  const [locationWarning, setLocationWarning] = useState(null);
   const [loading, setLoading]         = useState(false);
   const [activeMarker, setActiveMarker] = useState(null);
   const [holiday, setHoliday] = useState(null);
@@ -168,9 +178,11 @@ const PunchAttendance = () => {
     if (!token) { setError("Please log in first."); return; }
     setLoading(true);
     setError("");
+    setLocationWarning(null);
 
     try {
-      const loc     = await getLocation();
+      const { coords: loc, reason } = await getLocation();
+      if (!loc) setLocationWarning(LOCATION_WARNINGS[reason] || LOCATION_WARNINGS.unavailable);
       const address = loc ? await reverseGeocode(loc.lat, loc.lng) : null;
       const payload = { ...(loc || {}), ...(address ? { address } : {}) };
 
@@ -306,6 +318,12 @@ const PunchAttendance = () => {
         )}
 
         {error && <p className="pa__error">{error}</p>}
+
+        {locationWarning && (
+          <p className="pa__notice">
+            <i className="ti ti-map-pin-off" /> {locationWarning}
+          </p>
+        )}
 
         <button
           className={`pa__btn ${openSession ? "pa__btn--out" : "pa__btn--in"}`}

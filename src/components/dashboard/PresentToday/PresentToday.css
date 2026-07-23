@@ -87,6 +87,40 @@
 }
 .present__mark-btn:hover { box-shadow: 0 8px 18px rgba(21, 128, 61, 0.3); transform: translateY(-1px); }
 
+.present__date-input {
+  border: 1.5px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--nt-green-deep);
+  background: #f0fdf4;
+  font-family: inherit;
+}
+.present__date-input:focus {
+  outline: none;
+  border-color: #22c55e;
+}
+
+.present__status-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(21, 128, 61, 0.10);
+  border: 1px solid rgba(21, 128, 61, 0.28);
+  border-radius: 8px;
+  padding: 7px 13px;
+  color: var(--nt-green-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.12s;
+}
+.present__status-btn:hover {
+  background: rgba(21, 128, 61, 0.2);
+  transform: translateY(-1px);
+}
+
 /* ---------- Mark attendance modal ---------- */
 .present__modal-backdrop {
   position: fixed;
@@ -264,7 +298,7 @@
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  min-width: 1368px;
+  min-width: 1498px;
 }
 
 .present__table thead th {

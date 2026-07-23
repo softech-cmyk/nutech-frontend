@@ -25,18 +25,27 @@ const isOnDuty = (r) => {
   return !!(last && !last.punchOut);
 };
 
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
 const PresentToday = () => {
   const navigate          = useNavigate();
   const [rows, setRows]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(todayStr());
   const [showMarkModal, setShowMarkModal] = useState(false);
   const [markUserId, setMarkUserId] = useState("");
   const [markStatus, setMarkStatus] = useState("present");
   const [markNote, setMarkNote] = useState("");
   const [markError, setMarkError] = useState("");
   const [marking, setMarking] = useState(false);
-  const today = new Date().toLocaleDateString("en-US", {
+  const [statusRec, setStatusRec] = useState(null);
+  const [statusNote, setStatusNote] = useState("");
+  const [statusError, setStatusError] = useState("");
+  const [statusSubmitting, setStatusSubmitting] = useState(false);
+
+  const isToday = selectedDate === todayStr();
+  const dateLabel = new Date(`${selectedDate}T00:00:00`).toLocaleDateString("en-US", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
 
@@ -46,8 +55,7 @@ const PresentToday = () => {
 
     setLoading(true);
     try {
-      const todayStr = new Date().toISOString().slice(0, 10);
-      const res  = await fetch(`${API}/attendance/all?date=${todayStr}`, {
+      const res  = await fetch(`${API}/attendance/all?date=${selectedDate}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -57,13 +65,18 @@ const PresentToday = () => {
     } finally {
       setLoading(false);
     }
-  }, [navigate]);
+  }, [navigate, selectedDate]);
 
   useEffect(() => {
-    fetchPresent();
+    // Deferred via setTimeout rather than called directly, so the effect
+    // itself never synchronously invokes a function that sets state.
+    const initialFetch = setTimeout(fetchPresent, 0);
+    // Live polling only makes sense while looking at today — a past date's
+    // records won't change on their own.
+    if (!isToday) return () => clearTimeout(initialFetch);
     const interval = setInterval(fetchPresent, 30000);
-    return () => clearInterval(interval);
-  }, [fetchPresent]);
+    return () => { clearTimeout(initialFetch); clearInterval(interval); };
+  }, [fetchPresent, isToday]);
 
   // Employees who don't already have a record for today — the only ones a
   // manager can mark, since anyone already listed already has one.
@@ -101,7 +114,7 @@ const PresentToday = () => {
       const res = await fetch(`${API}/attendance/mark`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ userId: markUserId, status: markStatus, note: markNote.trim() }),
+        body: JSON.stringify({ userId: markUserId, status: markStatus, note: markNote.trim(), date: selectedDate }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
@@ -115,16 +128,57 @@ const PresentToday = () => {
     }
   };
 
+  const openStatusModal = (rec) => {
+    setStatusRec(rec);
+    setStatusNote("");
+    setStatusError("");
+  };
+
+  const closeStatusModal = () => setStatusRec(null);
+
+  const handleChangeStatus = async (action) => {
+    if (action !== "reset" && !statusNote.trim()) {
+      setStatusError("A reason is required.");
+      return;
+    }
+    setStatusError("");
+    setStatusSubmitting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/attendance/${statusRec._id}/regularize`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action, note: statusNote.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      toast.success(data.message);
+      setRows((prev) => prev.map((r) => (r._id === data.attendance._id ? data.attendance : r)));
+      setStatusRec(null);
+    } catch (err) {
+      setStatusError(err.message || "Could not update status.");
+    } finally {
+      setStatusSubmitting(false);
+    }
+  };
+
   return (
     <div className="present">
       <HomeButton />
       <div className="present__card">
         <div className="present__head">
           <div>
-            <h2 className="present__title">Present Today</h2>
-            <p className="present__sub">{today}</p>
+            <h2 className="present__title">{isToday ? "Present Today" : "Present"}</h2>
+            <p className="present__sub">{dateLabel}</p>
           </div>
           <div className="present__head-right">
+            <input
+              type="date"
+              className="present__date-input"
+              value={selectedDate}
+              max={todayStr()}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            />
             <span className="present__count">{rows.length} present</span>
             <button className="present__mark-btn" onClick={openMarkModal}>
               <i className="ti ti-calendar-plus" /> Mark Attendance
@@ -139,7 +193,9 @@ const PresentToday = () => {
           {loading ? (
             <p className="present__empty">Loading...</p>
           ) : rows.length === 0 ? (
-            <p className="present__empty">No one has punched in yet today.</p>
+            <p className="present__empty">
+              {isToday ? "No one has punched in yet today." : "No attendance records for this date."}
+            </p>
           ) : (
             <table className="present__table">
               <colgroup>
@@ -154,6 +210,7 @@ const PresentToday = () => {
                 <col style={{ width: "80px" }} />
                 <col style={{ width: "100px" }} />
                 <col style={{ width: "110px" }} />
+                <col style={{ width: "130px" }} />
               </colgroup>
               <thead>
                 <tr>
@@ -168,6 +225,7 @@ const PresentToday = () => {
                   <th>Hours</th>
                   <th>Status</th>
                   <th>Live</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -203,6 +261,15 @@ const PresentToday = () => {
                         <span className="present__track-off">Off duty</span>
                       )}
                     </td>
+                    <td>
+                      <button
+                        className="present__status-btn"
+                        onClick={() => openStatusModal(r)}
+                        title="Change attendance status for this record"
+                      >
+                        <i className="ti ti-pencil" /> Status
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -219,8 +286,8 @@ const PresentToday = () => {
             </div>
             <h3 className="present__modal-title">Mark attendance</h3>
             <p className="present__modal-sub">
-              For an employee who hasn't punched in today yet. Already-present employees can be
-              corrected from Attendance Records instead.
+              For an employee who has no record on {selectedDate} yet. To change an existing
+              record's status, use the Status button on that row instead.
             </p>
 
             <div className="present__modal-field">
@@ -234,7 +301,7 @@ const PresentToday = () => {
               </select>
             </div>
             {employees.length > 0 && markableEmployees.length === 0 && (
-              <p className="present__modal-note">Everyone already has a record for today.</p>
+              <p className="present__modal-note">Everyone already has a record for this date.</p>
             )}
 
             <div className="present__modal-status-row">
@@ -267,6 +334,72 @@ const PresentToday = () => {
               </button>
               <button className="present__modal-confirm" onClick={handleMarkAttendance} disabled={marking}>
                 {marking ? "Marking…" : "Mark attendance"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {statusRec && (
+        <div className="present__modal-backdrop" onClick={closeStatusModal}>
+          <div className="present__modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="present__modal-icon">
+              <i className="ti ti-pencil" aria-hidden="true" />
+            </div>
+            <h3 className="present__modal-title">Change status</h3>
+            <p className="present__modal-sub">
+              {statusRec.userId?.name || statusRec.userId?.phone || "Employee"} — {statusRec.date}
+              <br />
+              Current:{" "}
+              {statusRec.status === "present" ? "Present" : statusRec.status === "half-day" ? "Half Day" : "Absent"}
+              {statusRec.regularized && (
+                <> · regularized by {statusRec.regularizedBy?.name || "a manager"}</>
+              )}
+            </p>
+
+            <div className="present__modal-field">
+              <textarea
+                rows={2}
+                placeholder="Reason (required for Present / Half Day)"
+                value={statusNote}
+                onChange={(e) => setStatusNote(e.target.value)}
+              />
+            </div>
+
+            {statusError && <p className="present__modal-error">{statusError}</p>}
+
+            <div className="present__modal-status-row">
+              <button
+                type="button"
+                className="present__modal-status"
+                disabled={statusSubmitting}
+                onClick={() => handleChangeStatus("full-day")}
+              >
+                Present
+              </button>
+              <button
+                type="button"
+                className="present__modal-status"
+                disabled={statusSubmitting}
+                onClick={() => handleChangeStatus("half-day")}
+              >
+                Half Day
+              </button>
+              {statusRec.regularized && (
+                <button
+                  type="button"
+                  className="present__modal-status"
+                  disabled={statusSubmitting}
+                  onClick={() => handleChangeStatus("reset")}
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+
+            <div className="present__modal-actions">
+              <button className="present__modal-cancel" onClick={closeStatusModal} disabled={statusSubmitting}>
+                Close
               </button>
             </div>
           </div>
