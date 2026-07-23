@@ -169,7 +169,8 @@
   text-align: left;
 }
 .present__modal-field select,
-.present__modal-field textarea {
+.present__modal-field textarea,
+.present__modal-field input[type="time"] {
   width: 100%;
   border: 2px solid #bbf7d0;
   border-radius: 10px;
@@ -181,9 +182,17 @@
   resize: vertical;
 }
 .present__modal-field select:focus,
-.present__modal-field textarea:focus {
+.present__modal-field textarea:focus,
+.present__modal-field input[type="time"]:focus {
   outline: none;
   border-color: #22c55e;
+}
+.present__modal-label {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--nt-green-dark);
 }
 .present__modal-note {
   margin: -4px 0 12px;

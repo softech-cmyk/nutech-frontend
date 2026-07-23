@@ -36,6 +36,7 @@ const PresentToday = () => {
   const [showMarkModal, setShowMarkModal] = useState(false);
   const [markUserId, setMarkUserId] = useState("");
   const [markStatus, setMarkStatus] = useState("present");
+  const [markPunchInTime, setMarkPunchInTime] = useState("");
   const [markNote, setMarkNote] = useState("");
   const [markError, setMarkError] = useState("");
   const [marking, setMarking] = useState(false);
@@ -93,6 +94,7 @@ const PresentToday = () => {
     setShowMarkModal(true);
     setMarkUserId("");
     setMarkStatus("present");
+    setMarkPunchInTime("");
     setMarkNote("");
     setMarkError("");
     if (employees.length === 0) {
@@ -119,7 +121,13 @@ const PresentToday = () => {
       const res = await fetch(`${API}/attendance/mark`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ userId: markUserId, status: markStatus, note: markNote.trim(), date: selectedDate }),
+        body: JSON.stringify({
+          userId: markUserId,
+          status: markStatus,
+          note: markNote.trim(),
+          date: selectedDate,
+          ...(markStatus !== "absent" && markPunchInTime ? { punchInTime: markPunchInTime } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
@@ -321,6 +329,17 @@ const PresentToday = () => {
                 </button>
               ))}
             </div>
+
+            {markStatus !== "absent" && (
+              <div className="present__modal-field">
+                <label className="present__modal-label">Punch-in time (optional)</label>
+                <input
+                  type="time"
+                  value={markPunchInTime}
+                  onChange={(e) => setMarkPunchInTime(e.target.value)}
+                />
+              </div>
+            )}
 
             <div className="present__modal-field">
               <textarea
