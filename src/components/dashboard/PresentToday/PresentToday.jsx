@@ -84,6 +84,11 @@ const PresentToday = () => {
     (e) => !rows.some((r) => r.userId?._id === e._id)
   );
 
+  // The table intentionally still lists manager-marked-absent rows (so they
+  // can be corrected here), but the headline count should only reflect who's
+  // actually present.
+  const presentCount = rows.filter((r) => r.status !== "absent").length;
+
   const openMarkModal = async () => {
     setShowMarkModal(true);
     setMarkUserId("");
@@ -179,7 +184,7 @@ const PresentToday = () => {
               max={todayStr()}
               onChange={(e) => setSelectedDate(e.target.value)}
             />
-            <span className="present__count">{rows.length} present</span>
+            <span className="present__count">{presentCount} present</span>
             <button className="present__mark-btn" onClick={openMarkModal}>
               <i className="ti ti-calendar-plus" /> Mark Attendance
             </button>

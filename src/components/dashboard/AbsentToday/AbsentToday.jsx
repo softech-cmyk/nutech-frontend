@@ -35,8 +35,14 @@ const AbsentToday = () => {
 
       setHoliday(holidayData.holiday || null);
 
+      // A record with status "absent" (manually marked by a manager) means
+      // the employee IS absent — it must not count as "has a record, so
+      // they're present", or manager-marked absences would silently
+      // disappear from this list instead of showing up here.
       const presentIds = new Set(
-        (attData.records || []).map((r) => r.userId?._id || r.userId)
+        (attData.records || [])
+          .filter((r) => r.status !== "absent")
+          .map((r) => String(r.userId?._id || r.userId))
       );
 
       const absentUsers = (usersData.users || []).filter(

@@ -60,11 +60,8 @@ const ManagerDashboard = () => {
       if (meData.user?.name) setManagerName(meData.user.name);
 
       // Fetch team attendance for today
-      const [todayRes, recordsRes, leavesRes, holidayRes] = await Promise.all([
+      const [todayRes, leavesRes, holidayRes] = await Promise.all([
         fetch(`${API}/attendance/all?date=${todayStr()}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`${API}/attendance/all`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch(`${API}/leaves/all`, {
@@ -76,16 +73,17 @@ const ManagerDashboard = () => {
       ]);
 
       const todayData    = await todayRes.json();
-      const recordsData  = await recordsRes.json();
       const leavesData   = await leavesRes.json();
       const holidayData  = await holidayRes.json();
 
       setHoliday(holidayData.holiday || null);
 
-      const presentCount   = todayData.records?.length || 0;
+      // A record with status "absent" (manually marked by a manager) still
+      // counts as absent, not present — only present/half-day records count
+      // toward who's actually in today.
+      const presentCount   = (todayData.records || []).filter((r) => r.status !== "absent").length;
       const totalEmployees = meData.user ? await fetchEmployeeCount(token) : 0;
       const absentCount    = holidayData.holiday ? 0 : Math.max(0, totalEmployees - presentCount);
-      const totalRecords   = recordsData.records?.length || 0;
       const pendingLeaves  = (leavesData.leaves || []).filter((l) => l.status === "pending").length;
       const approvedLeaves = (leavesData.leaves || []).filter((l) => l.status === "approved").length;
       const rejectedLeaves = (leavesData.leaves || []).filter((l) => l.status === "rejected").length;
@@ -94,7 +92,10 @@ const ManagerDashboard = () => {
         present: presentCount,
         absent: absentCount,
         totalEmployees,
-        records: totalRecords,
+        // Mirrors "Present Today" — the tile links into Attendance Records,
+        // which opens on the Today tab, so its count should match what's
+        // actually shown there rather than an all-time record count.
+        records: presentCount,
         appliedLeaves: pendingLeaves,
         onLeaves: approvedLeaves,
         rejectedLeaves,
