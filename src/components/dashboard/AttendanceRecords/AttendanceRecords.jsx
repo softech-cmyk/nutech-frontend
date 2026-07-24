@@ -143,12 +143,75 @@ const addSummarySheet = (workbook, records) => {
   return sheet;
 };
 
+// Bare-bones sheet for the Today export: just punch times and hours worked
+// today, per employee — no day/week counts, since there's only one day here.
+const addTodayHoursSheet = (workbook, records) => {
+  const sheet = workbook.addWorksheet("Today's Hours", { views: [{ state: "frozen", ySplit: 1 }] });
+  sheet.columns = [
+    { header: "Name",         key: "name",  width: 26 },
+    { header: "Punch In",     key: "in",    width: 14 },
+    { header: "Punch Out",    key: "out",   width: 14 },
+    { header: "Hours Worked", key: "hours", width: 16 },
+  ];
+
+  const headerRow = sheet.getRow(1);
+  headerRow.height = 26;
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF15803D" } };
+    cell.alignment = { vertical: "middle", horizontal: "center" };
+  });
+
+  const sorted = [...records].sort((a, b) =>
+    (a.userId?.name || "").localeCompare(b.userId?.name || "")
+  );
+  sorted.forEach((rec, idx) => {
+    const row = sheet.addRow({
+      name: rec.userId?.name || rec.userId?.phone || "—",
+      in: fmtTime(rec.punchIn),
+      out: fmtTime(rec.punchOut),
+      hours: toHours(rec.totalMinutes),
+    });
+    row.getCell(4).numFmt = "0.00";
+    row.eachCell((cell) => {
+      cell.alignment = { vertical: "middle", horizontal: "center" };
+      cell.border = { bottom: { style: "thin", color: { argb: "FFDCFCE7" } } };
+      if (idx % 2 === 1) cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF0FDF4" } };
+    });
+    row.getCell(1).alignment = { vertical: "middle", horizontal: "left" };
+    row.getCell(1).font = { bold: true, color: { argb: "FF14532D" } };
+  });
+
+  if (sorted.length > 0) {
+    const firstDataRow = 2;
+    const lastDataRow  = sheet.rowCount;
+    const totalsRow = sheet.addRow({
+      name: "TOTAL",
+      hours: { formula: `SUM(D${firstDataRow}:D${lastDataRow})` },
+    });
+    totalsRow.height = 22;
+    totalsRow.getCell(4).numFmt = "0.00";
+    totalsRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FF14532D" } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDCFCE7" } };
+      cell.border = { top: { style: "medium", color: { argb: "FF15803D" } } };
+      cell.alignment = { vertical: "middle", horizontal: "center" };
+    });
+    totalsRow.getCell(1).alignment = { vertical: "middle", horizontal: "left" };
+  }
+
+  return sheet;
+};
+
 // One flat sheet, every record as its own row — good for a quick company-wide dump.
-const exportCombinedSheet = async (records, fileName) => {
+const exportCombinedSheet = async (records, fileName, { isToday = false } = {}) => {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "AttendEase";
   workbook.created = new Date();
 
+  // Today's hours is the headline number when exporting from the Today tab,
+  // so it leads the workbook rather than being buried after the day/week counts.
+  if (isToday) addTodayHoursSheet(workbook, records);
   addSummarySheet(workbook, records);
 
   const sheet = workbook.addWorksheet("Attendance");
@@ -617,7 +680,7 @@ const AttendanceRecords = () => {
   };
 
   const handleExportCombined = () => {
-    exportCombinedSheet(displayRecords, `attendance-${periodLabel()}.xlsx`);
+    exportCombinedSheet(displayRecords, `attendance-${periodLabel()}.xlsx`, { isToday: filterType === "today" });
   };
 
   const handleExportEmployeeWise = () => {
