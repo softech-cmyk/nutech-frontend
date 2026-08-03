@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleMap, useLoadScript, Marker, InfoWindow } from "@react-google-maps/api";
-import { getSocket, disconnectSocket } from "../../../utils/socket";
+import { disconnectSocket } from "../../../utils/socket";
+import { DUTY_STATUS_EVENT } from "../../../components/LocationTracker/LocationTracker";
 import "./PunchAttendance.css";
 
 const employeeNav = [
@@ -138,21 +139,17 @@ const PunchAttendance = () => {
       .catch(() => {});
   }, []);
 
-  // watch live location while on-duty, and push it to managers over the socket
+  // Watch live location while on-duty, purely to show the blue "you are here"
+  // dot on this page's own map. The actual broadcast to managers is handled
+  // app-wide by <LocationTracker />, so it keeps running even after the
+  // employee navigates away from this screen.
   useEffect(() => {
     if (status === "on-duty" && navigator.geolocation) {
-      const socket = getSocket();
       watchRef.current = navigator.geolocation.watchPosition(
-        (pos) => {
-          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          setLivePos(coords);
-          socket.emit("location:update", coords);
-        },
+        (pos) => setLivePos({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
         () => {},
         { enableHighAccuracy: true, maximumAge: 10000 }
       );
-    } else {
-      getSocket().emit("location:stop");
     }
     return () => {
       if (watchRef.current != null) navigator.geolocation.clearWatch(watchRef.current);
@@ -196,6 +193,7 @@ const PunchAttendance = () => {
         if (!res.ok) throw new Error(data.message);
         setSessions(data.attendance.sessions || []);
         setDayStatus(data.attendance.status);
+        window.dispatchEvent(new CustomEvent(DUTY_STATUS_EVENT, { detail: { onDuty: true } }));
         if (data.attendance.lateArrival) {
           setLateNotice(
             data.attendance.lateRebateApplied
@@ -217,6 +215,7 @@ const PunchAttendance = () => {
         setSessions(data.attendance.sessions || []);
         setTotalMinutes(data.attendance.totalMinutes);
         setDayStatus(data.attendance.status);
+        window.dispatchEvent(new CustomEvent(DUTY_STATUS_EVENT, { detail: { onDuty: false } }));
       }
     } catch (err) {
       setError(err.message);
