@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { subscribeToPush } from "../../../utils/push";
 import "./Login.css";
@@ -12,6 +12,17 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Already have a saved session? Skip the login form entirely.
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    if (!token || !user) return;
+
+    if (user.mustChangePassword) navigate("/ChangePassword", { replace: true });
+    else if (user.role === "manager") navigate("/managerdashboard", { replace: true });
+    else navigate("/EmployeeDashboard", { replace: true });
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
