@@ -104,13 +104,14 @@ const Login = () => {
             <i className="ti ti-phone login__field-icon" aria-hidden="true" />
             <input
               id="phone"
+              name="username"
               type="tel"
               inputMode="numeric"
               maxLength={10}
               placeholder="Enter your phone number"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ""))}
-              autoComplete="tel"
+              autoComplete="username"
             />
           </div>
 
@@ -121,6 +122,7 @@ const Login = () => {
             <i className="ti ti-lock login__field-icon" aria-hidden="true" />
             <input
               id="password"
+              name="password"
               type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
               value={password}
