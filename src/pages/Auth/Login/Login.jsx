@@ -10,6 +10,7 @@ const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -23,6 +24,16 @@ const Login = () => {
     else if (user.role === "manager") navigate("/managerdashboard", { replace: true });
     else navigate("/EmployeeDashboard", { replace: true });
   }, [navigate]);
+
+  // Pre-fill from a previously "remembered" login, if any.
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem("rememberedCredentials") || "null");
+    if (saved) {
+      setPhoneNumber(saved.phone || "");
+      setPassword(saved.password || "");
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,6 +54,16 @@ const Login = () => {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+
+      if (rememberMe) {
+        localStorage.setItem(
+          "rememberedCredentials",
+          JSON.stringify({ phone: phoneNumber, password })
+        );
+      } else {
+        localStorage.removeItem("rememberedCredentials");
+      }
+
       subscribeToPush();
 
       if (data.user.mustChangePassword) {
@@ -137,6 +158,20 @@ const Login = () => {
             >
               <i className={`ti ${showPassword ? "ti-eye-off" : "ti-eye"}`} />
             </button>
+          </div>
+
+          <div className="login__row">
+            <label className="login__remember">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              <span className="login__checkbox">
+                <i className="ti ti-check" aria-hidden="true" />
+              </span>
+              Remember me
+            </label>
           </div>
 
           <button type="submit" className="login__submit" disabled={loading}>
