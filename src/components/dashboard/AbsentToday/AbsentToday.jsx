@@ -17,6 +17,7 @@ const AbsentToday = () => {
   const [markingUser, setMarkingUser]         = useState(null);
   const [markStatus, setMarkStatus]           = useState("absent");
   const [markPunchInTime, setMarkPunchInTime] = useState("");
+  const [markPunchOutTime, setMarkPunchOutTime] = useState("");
   const [markNote, setMarkNote]               = useState("");
   const [markError, setMarkError]             = useState("");
   const [marking, setMarking]                 = useState(false);
@@ -95,6 +96,7 @@ const AbsentToday = () => {
     setMarkingUser(user);
     setMarkStatus("absent");
     setMarkPunchInTime("");
+    setMarkPunchOutTime("");
     setMarkNote("");
     setMarkError("");
   };
@@ -115,6 +117,7 @@ const AbsentToday = () => {
           note: markNote.trim(),
           date: todayStr(),
           ...(markStatus !== "absent" && markPunchInTime ? { punchInTime: markPunchInTime } : {}),
+          ...(markStatus !== "absent" && markPunchInTime && markPunchOutTime ? { punchOutTime: markPunchOutTime } : {}),
         }),
       });
       const data = await res.json();
@@ -269,6 +272,17 @@ const AbsentToday = () => {
                   type="time"
                   value={markPunchInTime}
                   onChange={(e) => setMarkPunchInTime(e.target.value)}
+                />
+              </div>
+            )}
+
+            {markStatus !== "absent" && markPunchInTime && (
+              <div className="absent__modal-field">
+                <label className="absent__modal-label">Punch-out time (optional)</label>
+                <input
+                  type="time"
+                  value={markPunchOutTime}
+                  onChange={(e) => setMarkPunchOutTime(e.target.value)}
                 />
               </div>
             )}

@@ -519,10 +519,18 @@ const LocationModal = ({ rec, onClose, onLogged }) => {
   );
 };
 
+const fmtTimeInput = (iso) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" });
+};
+
 const RegularizeModal = ({ rec, onClose, onUpdated }) => {
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [punchInTime, setPunchInTime]   = useState(fmtTimeInput(rec.punchIn));
+  const [punchOutTime, setPunchOutTime] = useState(fmtTimeInput(rec.punchOut));
 
   const runAction = async (action) => {
     if (action !== "reset" && !note.trim()) {
@@ -536,7 +544,12 @@ const RegularizeModal = ({ rec, onClose, onUpdated }) => {
       const res = await fetch(`${API}/attendance/${rec._id}/regularize`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action, note }),
+        body: JSON.stringify({
+          action,
+          note,
+          ...(action !== "reset" && punchInTime  ? { punchInTime }  : {}),
+          ...(action !== "reset" && punchOutTime ? { punchOutTime } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
@@ -572,6 +585,27 @@ const RegularizeModal = ({ rec, onClose, onUpdated }) => {
               <i className="ti ti-pencil" /> Already regularized by {rec.regularizedBy?.name || "a manager"}
             </span>
           )}
+        </div>
+
+        <div className="ar__reg-times">
+          <div>
+            <label className="ar__reg-label" htmlFor="reg-punch-in">Punch-in time</label>
+            <input
+              id="reg-punch-in"
+              type="time"
+              value={punchInTime}
+              onChange={(e) => setPunchInTime(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="ar__reg-label" htmlFor="reg-punch-out">Punch-out time</label>
+            <input
+              id="reg-punch-out"
+              type="time"
+              value={punchOutTime}
+              onChange={(e) => setPunchOutTime(e.target.value)}
+            />
+          </div>
         </div>
 
         <label className="ar__reg-label" htmlFor="reg-note">
