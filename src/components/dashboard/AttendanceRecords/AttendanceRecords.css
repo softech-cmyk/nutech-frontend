@@ -712,6 +712,56 @@
 }
 .ar__reg-times input[type="time"]:focus { border-color: var(--nt-green-mid); }
 
+.ar__reg-times input[type="number"] {
+  border: 1.5px solid var(--nt-line);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: #1f3b22;
+  background: #f0fdf4;
+  outline: none;
+  transition: border-color 0.18s;
+}
+.ar__reg-times input[type="number"]:focus { border-color: var(--nt-green-mid); }
+
+.ar__reg-loc-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 2px 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--nt-green-dark);
+  cursor: pointer;
+}
+
+.ar__reg-locations {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1.5px dashed var(--nt-line);
+  border-radius: 10px;
+  background: #fafffc;
+}
+
+.ar__reg-loc-addr {
+  width: 100%;
+  border: 1.5px solid var(--nt-line);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: #1f3b22;
+  background: #f0fdf4;
+  outline: none;
+  transition: border-color 0.18s;
+}
+.ar__reg-loc-addr:focus { border-color: var(--nt-green-mid); }
+
 .ar__reg-error {
   display: flex;
   align-items: center;

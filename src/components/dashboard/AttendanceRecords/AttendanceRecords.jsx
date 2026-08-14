@@ -531,11 +531,28 @@ const RegularizeModal = ({ rec, onClose, onUpdated }) => {
   const [error, setError] = useState("");
   const [punchInTime, setPunchInTime]   = useState(fmtTimeInput(rec.punchIn));
   const [punchOutTime, setPunchOutTime] = useState(fmtTimeInput(rec.punchOut));
+  const [editLocation, setEditLocation] = useState(false);
+  const [punchInLat, setPunchInLat]   = useState(rec.punchInLocation?.lat ?? "");
+  const [punchInLng, setPunchInLng]   = useState(rec.punchInLocation?.lng ?? "");
+  const [punchInAddress, setPunchInAddress]   = useState(rec.punchInAddress || "");
+  const [punchOutLat, setPunchOutLat] = useState(rec.punchOutLocation?.lat ?? "");
+  const [punchOutLng, setPunchOutLng] = useState(rec.punchOutLocation?.lng ?? "");
+  const [punchOutAddress, setPunchOutAddress] = useState(rec.punchOutAddress || "");
 
   const runAction = async (action) => {
     if (action !== "reset" && !note.trim()) {
       setError("A reason is required to regularize attendance.");
       return;
+    }
+    if (editLocation) {
+      if ((punchInLat === "") !== (punchInLng === "")) {
+        setError("Punch-in latitude and longitude must both be set.");
+        return;
+      }
+      if ((punchOutLat === "") !== (punchOutLng === "")) {
+        setError("Punch-out latitude and longitude must both be set.");
+        return;
+      }
     }
     setSubmitting(true);
     setError("");
@@ -549,6 +566,10 @@ const RegularizeModal = ({ rec, onClose, onUpdated }) => {
           note,
           ...(action !== "reset" && punchInTime  ? { punchInTime }  : {}),
           ...(action !== "reset" && punchOutTime ? { punchOutTime } : {}),
+          ...(action !== "reset" && editLocation && punchInLat  !== "" ? { punchInLat: Number(punchInLat), punchInLng: Number(punchInLng) } : {}),
+          ...(action !== "reset" && editLocation && punchInAddress.trim() ? { punchInAddress: punchInAddress.trim() } : {}),
+          ...(action !== "reset" && editLocation && punchOutLat !== "" ? { punchOutLat: Number(punchOutLat), punchOutLng: Number(punchOutLng) } : {}),
+          ...(action !== "reset" && editLocation && punchOutAddress.trim() ? { punchOutAddress: punchOutAddress.trim() } : {}),
         }),
       });
       const data = await res.json();
@@ -607,6 +628,53 @@ const RegularizeModal = ({ rec, onClose, onUpdated }) => {
             />
           </div>
         </div>
+
+        <button
+          type="button"
+          className="ar__reg-loc-toggle"
+          onClick={() => setEditLocation((v) => !v)}
+        >
+          <i className={`ti ${editLocation ? "ti-chevron-down" : "ti-chevron-right"}`} /> Edit punch location
+        </button>
+
+        {editLocation && (
+          <div className="ar__reg-locations">
+            <p className="ar__loc-gate-intro">
+              <i className="ti ti-shield-lock" /> Only correct this if the recorded GPS fix was wrong (e.g. a blank or clearly bad reading). The reason below is logged against this change.
+            </p>
+            <div className="ar__reg-times">
+              <div>
+                <label className="ar__reg-label" htmlFor="reg-in-lat">Punch-in latitude</label>
+                <input id="reg-in-lat" type="number" step="any" value={punchInLat}
+                  onChange={(e) => setPunchInLat(e.target.value)} placeholder="e.g. 28.6139" />
+              </div>
+              <div>
+                <label className="ar__reg-label" htmlFor="reg-in-lng">Punch-in longitude</label>
+                <input id="reg-in-lng" type="number" step="any" value={punchInLng}
+                  onChange={(e) => setPunchInLng(e.target.value)} placeholder="e.g. 77.2090" />
+              </div>
+            </div>
+            <label className="ar__reg-label" htmlFor="reg-in-addr">Punch-in address</label>
+            <input id="reg-in-addr" type="text" className="ar__reg-loc-addr" value={punchInAddress}
+              onChange={(e) => setPunchInAddress(e.target.value)} placeholder="Optional address text" />
+
+            <div className="ar__reg-times">
+              <div>
+                <label className="ar__reg-label" htmlFor="reg-out-lat">Punch-out latitude</label>
+                <input id="reg-out-lat" type="number" step="any" value={punchOutLat}
+                  onChange={(e) => setPunchOutLat(e.target.value)} placeholder="e.g. 28.6139" />
+              </div>
+              <div>
+                <label className="ar__reg-label" htmlFor="reg-out-lng">Punch-out longitude</label>
+                <input id="reg-out-lng" type="number" step="any" value={punchOutLng}
+                  onChange={(e) => setPunchOutLng(e.target.value)} placeholder="e.g. 77.2090" />
+              </div>
+            </div>
+            <label className="ar__reg-label" htmlFor="reg-out-addr">Punch-out address</label>
+            <input id="reg-out-addr" type="text" className="ar__reg-loc-addr" value={punchOutAddress}
+              onChange={(e) => setPunchOutAddress(e.target.value)} placeholder="Optional address text" />
+          </div>
+        )}
 
         <label className="ar__reg-label" htmlFor="reg-note">
           Reason <span className="ar__reg-required">(required for Full/Half Day)</span>
