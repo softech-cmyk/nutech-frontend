@@ -122,7 +122,7 @@ const PunchAttendance = () => {
           setLateNotice(
             attendance.lateRebateApplied
               ? "Late arrival — forgiven under this month's rebate."
-              : "Late arrival — marked half-day (monthly rebate already used up)."
+              : "Late arrival — marked absent (monthly rebate already used up)."
           );
         }
       })
@@ -198,7 +198,7 @@ const PunchAttendance = () => {
           setLateNotice(
             data.attendance.lateRebateApplied
               ? `Late arrival — rebate applied (${data.lateRebatesUsed}/3 used this month). Today still counts as present if you complete your hours.`
-              : "Late arrival — this month's 3 rebate days are already used, so today is marked half-day."
+              : "Late arrival — this month's 3 rebate days are already used, so today is marked absent."
           );
         } else {
           setLateNotice(null);
