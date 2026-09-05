@@ -677,7 +677,7 @@ const RegularizeModal = ({ rec, onClose, onUpdated }) => {
         )}
 
         <label className="ar__reg-label" htmlFor="reg-note">
-          Reason <span className="ar__reg-required">(required for Full/Half Day)</span>
+          Reason <span className="ar__reg-required">(required for Full/Half Day/Absent)</span>
         </label>
         <textarea
           id="reg-note"
@@ -696,6 +696,9 @@ const RegularizeModal = ({ rec, onClose, onUpdated }) => {
           </button>
           <button className="ar__reg-btn ar__reg-btn--half" disabled={submitting} onClick={() => runAction("half-day")}>
             <i className="ti ti-circle-half-2" /> Mark Half Day
+          </button>
+          <button className="ar__reg-btn ar__reg-btn--absent" disabled={submitting} onClick={() => runAction("absent")}>
+            <i className="ti ti-circle-x" /> Mark Absent
           </button>
           {rec.regularized && (
             <button className="ar__reg-btn ar__reg-btn--reset" disabled={submitting} onClick={() => runAction("reset")}>

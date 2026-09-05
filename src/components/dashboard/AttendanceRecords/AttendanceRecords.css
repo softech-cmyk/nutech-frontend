@@ -807,6 +807,11 @@
   color: #a16207;
   border: 1.5px solid #fde68a;
 }
+.ar__reg-btn--absent {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1.5px solid #fecaca;
+}
 .ar__reg-btn--reset {
   background: transparent;
   color: var(--nt-muted);

@@ -384,7 +384,7 @@ const PresentToday = () => {
             <div className="present__modal-field">
               <textarea
                 rows={2}
-                placeholder="Reason (required for Present / Half Day)"
+                placeholder="Reason (required for Present / Half Day / Absent)"
                 value={statusNote}
                 onChange={(e) => setStatusNote(e.target.value)}
               />
@@ -408,6 +408,14 @@ const PresentToday = () => {
                 onClick={() => handleChangeStatus("half-day")}
               >
                 Half Day
+              </button>
+              <button
+                type="button"
+                className="present__modal-status"
+                disabled={statusSubmitting}
+                onClick={() => handleChangeStatus("absent")}
+              >
+                Absent
               </button>
               {statusRec.regularized && (
                 <button
