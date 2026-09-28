@@ -14,7 +14,7 @@ const DEPARTMENTS = [
   "Accounts",
 ];
 
-const COMPANIES = ["Nutech International", "SPL Technologies"];
+const COMPANIES = ["Nutech International", "SPL Technologies", "Phenotec Innovations"];
 
 // "HH:mm" -> "10:00 AM"
 const fmtTime = (hhmm) => {

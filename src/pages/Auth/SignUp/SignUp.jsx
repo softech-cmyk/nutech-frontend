@@ -16,6 +16,7 @@ const DEPARTMENTS = [
 const COMPANIES = [
   "Nutech International",
   "SPL Technologies",
+  "Phenotec Innovations",
 ];
 
 const countries = [
