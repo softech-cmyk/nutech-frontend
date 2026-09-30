@@ -85,7 +85,6 @@ const PunchAttendance = () => {
   const [totalMinutes, setTotalMinutes] = useState(null);
   const [livePos, setLivePos]               = useState(null);
   const [dayStatus, setDayStatus]     = useState(null); // "present" | "half-day"
-  const [lateNotice, setLateNotice]   = useState(null);
   const [error, setError]             = useState("");
   const [locationWarning, setLocationWarning] = useState(null);
   const [loading, setLoading]         = useState(false);
@@ -118,13 +117,6 @@ const PunchAttendance = () => {
         setSessions(attendance.sessions || []);
         if (attendance.totalMinutes != null) setTotalMinutes(attendance.totalMinutes);
         if (attendance.status) setDayStatus(attendance.status);
-        if (attendance.lateArrival) {
-          setLateNotice(
-            attendance.lateRebateApplied
-              ? "Late arrival — forgiven under this month's rebate."
-              : "Late arrival — marked absent (monthly rebate already used up)."
-          );
-        }
       })
       .catch(() => {});
   }, []);
@@ -194,16 +186,6 @@ const PunchAttendance = () => {
         setSessions(data.attendance.sessions || []);
         setDayStatus(data.attendance.status);
         window.dispatchEvent(new CustomEvent(DUTY_STATUS_EVENT, { detail: { onDuty: true } }));
-        if (data.attendance.lateArrival) {
-          setLateNotice(
-            data.attendance.lateRebateApplied
-              ? `Late arrival — rebate applied (${data.lateRebatesUsed}/3 used this month). Today still counts as present if you complete your hours.`
-              : "Late arrival — this month's 3 rebate days are already used, so today is marked absent."
-          );
-        } else {
-          setLateNotice(null);
-        }
-
       } else {
         const res  = await fetch(`${API}/punch-out`, {
           method: "POST",
@@ -308,12 +290,6 @@ const PunchAttendance = () => {
           <div className="pa__badge pa__badge--half-day">
             <i className="ti ti-clock-exclamation" /> Half-day
           </div>
-        )}
-
-        {lateNotice && (
-          <p className={lateNotice.includes("already used") ? "pa__error" : "pa__notice"}>
-            <i className="ti ti-info-circle" /> {lateNotice}
-          </p>
         )}
 
         {error && <p className="pa__error">{error}</p>}
