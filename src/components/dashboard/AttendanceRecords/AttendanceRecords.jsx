@@ -26,6 +26,12 @@ const STATUS_LABEL = { present: "Present", "half-day": "Half Day", absent: "Abse
 const STATUS_FILL  = { present: "FFDCFCE7", "half-day": "FFFEF9C3", absent: "FFFEE2E2" };
 const STATUS_FONT  = { present: "FF15803D", "half-day": "FFA16207", absent: "FFB91C1C" };
 
+// Muster-roll export: P/H/A come from the attendance status itself, L is a
+// day covered by an approved Leave record with no attendance of its own.
+const STATUS_LETTER = { present: "P", "half-day": "H", absent: "A" };
+const LETTER_COLOR  = { P: "FF15803D", H: "FFA16207", A: "FFB91C1C", L: "FF1D4ED8" };
+const DAY_ABBR = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+
 const toHours = (mins) => (mins != null ? Math.round((mins / 60) * 100) / 100 : null);
 
 // Groups flat attendance records into one entry per employee, sorted by name then date.
@@ -360,6 +366,224 @@ const exportSingleEmployeeSheet = async (group, fileName) => {
   workbook.creator = "AttendEase";
   workbook.created = new Date();
   addEmployeeSheet(workbook, group, (group.name || "Employee").slice(0, 31));
+  await triggerDownload(workbook, fileName);
+};
+
+// One entry per calendar day of the month, with its day-of-week abbreviation
+// and whether it's a Sunday or a named company holiday (both render as a
+// shaded separator column with no per-employee data, since nobody's expected
+// to punch in).
+const buildMonthDays = (month, holidays) => {
+  const [year, mo] = month.split("-").map(Number);
+  const daysInMonth = new Date(year, mo, 0).getDate();
+  const holidayMap = new Map(
+    holidays.filter((h) => h.date.startsWith(month)).map((h) => [h.date, h.name])
+  );
+
+  const days = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${month}-${String(d).padStart(2, "0")}`;
+    const dow = new Date(`${dateStr}T00:00:00+05:30`).getDay();
+    const holidayName = holidayMap.get(dateStr) || null;
+    days.push({
+      day: d,
+      dateStr,
+      abbr: DAY_ABBR[dow],
+      isSunday: dow === 0,
+      isHoliday: !!holidayName,
+      holidayName,
+    });
+  }
+  return days;
+};
+
+// userId -> Set of "YYYY-MM-DD" strings this month covered by an approved leave.
+const buildLeaveDatesByUser = (leaves, month) => {
+  const monthStart = `${month}-01`;
+  const monthEnd   = `${month}-31`; // safe as a string upper bound, never parsed as a real date
+  const map = new Map();
+
+  for (const l of leaves) {
+    const userId = l.userId?._id || l.userId;
+    if (!userId) continue;
+    const from = l.startDate < monthStart ? monthStart : l.startDate;
+    const to   = l.endDate   > monthEnd   ? monthEnd   : l.endDate;
+    if (from > to) continue;
+
+    if (!map.has(userId)) map.set(userId, new Set());
+    const set = map.get(userId);
+    let cursor = new Date(`${from}T00:00:00Z`);
+    const last = new Date(`${to}T00:00:00Z`);
+    while (cursor <= last) {
+      const ds = cursor.toISOString().slice(0, 10);
+      if (ds.startsWith(month)) set.add(ds);
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+  }
+  return map;
+};
+
+// A muster-roll style month sheet: one column per calendar day, Sundays and
+// holidays as shaded separator columns, two rows per employee (punch times,
+// then a P/H/A/L status letter).
+const addMusterRollSheet = (workbook, records, month, holidays, leaves) => {
+  const days = buildMonthDays(month, holidays);
+  const leaveDatesByUser = buildLeaveDatesByUser(leaves, month);
+  const groups = groupRecordsByEmployee(records);
+  const today = new Date().toISOString().slice(0, 10);
+  const monthName = new Date(`${month}-01T00:00:00Z`).toLocaleDateString("en-US", { month: "long", timeZone: "UTC" });
+  const year = month.slice(0, 4);
+
+  const sheet = workbook.addWorksheet(`Muster ${month}`, {
+    views: [{ state: "frozen", xSplit: 2, ySplit: 3 }],
+  });
+
+  const totalCols = 2 + days.length;
+  sheet.getColumn(1).width = 6;
+  sheet.getColumn(2).width = 22;
+  days.forEach((d, i) => {
+    sheet.getColumn(3 + i).width = (d.isSunday || d.isHoliday) ? 4 : 9;
+  });
+
+  // Row 1 — title
+  sheet.mergeCells(1, 1, 1, totalCols);
+  const titleCell = sheet.getCell(1, 1);
+  titleCell.value = `Attendance Sheet Month of ${monthName} ${year}`;
+  titleCell.font = { bold: true, size: 14, color: { argb: "FFC2410C" } };
+  titleCell.alignment = { vertical: "middle", horizontal: "left" };
+  sheet.getRow(1).height = 24;
+
+  // Row 2 — day-of-week abbreviations
+  sheet.mergeCells(2, 1, 2, 2);
+  const dayLabelCell = sheet.getCell(2, 1);
+  dayLabelCell.value = "Day";
+  dayLabelCell.font = { bold: true };
+  dayLabelCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE7D8C3" } };
+  dayLabelCell.alignment = { vertical: "middle", horizontal: "center" };
+
+  // Row 3 — "Sr. No." / "Name of Employee" + date numbers
+  const srHeaderCell = sheet.getCell(3, 1);
+  srHeaderCell.value = "Sr. No.";
+  const nameHeaderCell = sheet.getCell(3, 2);
+  nameHeaderCell.value = "Name of Employee";
+  [srHeaderCell, nameHeaderCell].forEach((cell) => {
+    cell.font = { bold: true };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE7D8C3" } };
+    cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+  });
+
+  days.forEach((d, i) => {
+    const col = 3 + i;
+    const headerFill = (d.isSunday || d.isHoliday) ? "FFFDE9D9" : "FFF3E8D9";
+    const headerFont = d.isSunday ? "FFDC2626" : d.isHoliday ? "FFC2410C" : "FF374151";
+
+    const dowCell = sheet.getCell(2, col);
+    dowCell.value = d.abbr;
+    const dateCell = sheet.getCell(3, col);
+    dateCell.value = d.day;
+
+    [dowCell, dateCell].forEach((cell) => {
+      cell.alignment = { vertical: "middle", horizontal: "center" };
+      cell.font = { bold: true, color: { argb: headerFont } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: headerFill } };
+    });
+  });
+  sheet.getRow(2).height = 18;
+  sheet.getRow(3).height = 18;
+
+  const dataStartRow = 4;
+  let rowCursor = dataStartRow;
+
+  groups.forEach((group, idx) => {
+    const timeRow = rowCursor;
+    const statusRow = rowCursor + 1;
+    const dayMap = new Map(group.days.map((rec) => [rec.date, rec]));
+    const leaveDates = leaveDatesByUser.get(group.userId) || new Set();
+    const band = idx % 2 === 1 ? "FFEFF8F1" : null;
+
+    sheet.mergeCells(timeRow, 1, statusRow, 1);
+    const srCell = sheet.getCell(timeRow, 1);
+    srCell.value = idx + 1;
+    srCell.alignment = { vertical: "middle", horizontal: "center" };
+    srCell.font = { bold: true };
+
+    sheet.mergeCells(timeRow, 2, statusRow, 2);
+    const nameCell = sheet.getCell(timeRow, 2);
+    nameCell.value = group.name;
+    nameCell.alignment = { vertical: "middle", horizontal: "left", indent: 1 };
+    nameCell.font = { bold: true, color: { argb: "FF14532D" } };
+    if (band) { srCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: band } }; nameCell.fill = srCell.fill; }
+
+    days.forEach((d, i) => {
+      if (d.isSunday || d.isHoliday) return; // filled in below as a merged separator column
+
+      const col = 3 + i;
+      const timeCell   = sheet.getCell(timeRow, col);
+      const statusCell = sheet.getCell(statusRow, col);
+      const rec = dayMap.get(d.dateStr);
+
+      if (rec) {
+        timeCell.value = `${fmtTime(rec.punchIn)}\n${fmtTime(rec.punchOut)}`;
+        const letter = STATUS_LETTER[rec.status] || "?";
+        statusCell.value = letter;
+        statusCell.font = { bold: true, color: { argb: LETTER_COLOR[letter] || "FF374151" } };
+      } else if (leaveDates.has(d.dateStr)) {
+        statusCell.value = "L";
+        statusCell.font = { bold: true, color: { argb: LETTER_COLOR.L } };
+      } else if (d.dateStr <= today) {
+        statusCell.value = "A";
+        statusCell.font = { bold: true, color: { argb: LETTER_COLOR.A } };
+      } // future day — left blank
+
+      timeCell.alignment   = { vertical: "middle", horizontal: "center", wrapText: true };
+      statusCell.alignment = { vertical: "middle", horizontal: "center" };
+      if (band) {
+        timeCell.fill   = { type: "pattern", pattern: "solid", fgColor: { argb: band } };
+        statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: band } };
+      }
+    });
+
+    sheet.getRow(timeRow).height = 28;
+    sheet.getRow(statusRow).height = 16;
+    rowCursor = statusRow + 1;
+  });
+
+  const lastDataRow = rowCursor - 1;
+
+  // Sunday/holiday columns: one cell merged down the full employee block,
+  // with the day/holiday name running vertically — no per-employee data,
+  // since nobody's expected to punch in on these days.
+  if (lastDataRow >= dataStartRow) {
+    days.forEach((d, i) => {
+      if (!d.isSunday && !d.isHoliday) return;
+      const col = 3 + i;
+      for (let r = dataStartRow; r <= lastDataRow; r++) {
+        const cell = sheet.getCell(r, col);
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: d.isSunday ? "FFFCE4E4" : "FFFDF0DD" } };
+        cell.border = { diagonal: { up: true, down: true, style: "dashed", color: { argb: "FFEF4444" } } };
+      }
+      sheet.mergeCells(dataStartRow, col, lastDataRow, col);
+      const label = sheet.getCell(dataStartRow, col);
+      label.value = d.isSunday ? "SUNDAY" : d.holidayName.toUpperCase();
+      label.alignment = { textRotation: 90, vertical: "middle", horizontal: "center", wrapText: true };
+      label.font = { bold: true, color: { argb: d.isSunday ? "FFB91C1C" : "FFC2410C" } };
+    });
+  }
+
+  const legendRow = lastDataRow + 2;
+  sheet.getCell(legendRow, 1).value = "Legend:";
+  sheet.getCell(legendRow, 1).font = { bold: true };
+  sheet.getCell(legendRow, 2).value = "P = Present    H = Half Day    A = Absent    L = Leave";
+  sheet.getCell(legendRow, 2).font = { italic: true, color: { argb: "FF6B7280" } };
+
+  return sheet;
+};
+
+const exportMusterRoll = async (records, month, holidays, leaves, fileName) => {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "AttendEase";
+  workbook.created = new Date();
+  addMusterRollSheet(workbook, records, month, holidays, leaves);
   await triggerDownload(workbook, fileName);
 };
 
@@ -727,6 +951,7 @@ const AttendanceRecords = () => {
   const [regularizingRec, setRegularizingRec] = useState(null);
   const [expandedUsers, setExpandedUsers] = useState(new Set());
   const [sundayStatusByUser, setSundayStatusByUser] = useState({});
+  const [exportingMuster, setExportingMuster] = useState(false);
 
   const handleRegularized = (updated) => {
     setRecords((prev) => prev.map((r) => (r._id === updated._id ? updated : r)));
@@ -799,6 +1024,31 @@ const AttendanceRecords = () => {
     );
   };
 
+  const handleExportMusterRoll = async () => {
+    setExportingMuster(true);
+    try {
+      const token = localStorage.getItem("token");
+      const year = activeMonth.slice(0, 4);
+      const [holidaysRes, leavesRes] = await Promise.all([
+        fetch(`${API}/holidays?year=${year}`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API}/leaves/all`, { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+      const [holidaysData, leavesData] = await Promise.all([holidaysRes.json(), leavesRes.json()]);
+      const approvedLeaves = (leavesData.leaves || []).filter((l) => l.status === "approved");
+      await exportMusterRoll(
+        displayRecords,
+        activeMonth,
+        holidaysData.holidays || [],
+        approvedLeaves,
+        `attendance-muster-roll-${activeMonth}.xlsx`
+      );
+    } catch (err) {
+      console.error("Muster roll export failed:", err.message);
+    } finally {
+      setExportingMuster(false);
+    }
+  };
+
   const fetchRecords = useCallback(async () => {
     const token = localStorage.getItem("token");
     if (!token) { navigate("/Login"); return; }
@@ -863,6 +1113,16 @@ const AttendanceRecords = () => {
             >
               <i className="ti ti-users" /> Export (By Employee)
             </button>
+            {filterType === "month" && (
+              <button
+                className="ar__export-btn ar__export-btn--alt"
+                onClick={handleExportMusterRoll}
+                disabled={displayRecords.length === 0 || exportingMuster}
+                title="Muster-roll style sheet: one column per day, Sundays/holidays shaded, P/H/A/L per employee"
+              >
+                <i className="ti ti-table" /> {exportingMuster ? "Preparing…" : "Export (Muster Roll)"}
+              </button>
+            )}
             <button className="ar__refresh-btn" onClick={fetchRecords}>
               <i className="ti ti-refresh" /> Refresh
             </button>

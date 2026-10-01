@@ -85,6 +85,7 @@ const PunchAttendance = () => {
   const [totalMinutes, setTotalMinutes] = useState(null);
   const [livePos, setLivePos]               = useState(null);
   const [dayStatus, setDayStatus]     = useState(null); // "present" | "half-day"
+  const [lateNotice, setLateNotice]   = useState(null);
   const [error, setError]             = useState("");
   const [locationWarning, setLocationWarning] = useState(null);
   const [loading, setLoading]         = useState(false);
@@ -117,6 +118,13 @@ const PunchAttendance = () => {
         setSessions(attendance.sessions || []);
         if (attendance.totalMinutes != null) setTotalMinutes(attendance.totalMinutes);
         if (attendance.status) setDayStatus(attendance.status);
+        if (attendance.lateArrival) {
+          setLateNotice(
+            attendance.lateCycleAbsent
+              ? "Late arrival — this is your 3rd late day this month, marked absent."
+              : "Late arrival — tolerated for now."
+          );
+        }
       })
       .catch(() => {});
   }, []);
@@ -186,6 +194,15 @@ const PunchAttendance = () => {
         setSessions(data.attendance.sessions || []);
         setDayStatus(data.attendance.status);
         window.dispatchEvent(new CustomEvent(DUTY_STATUS_EVENT, { detail: { onDuty: true } }));
+        if (data.attendance.lateArrival) {
+          setLateNotice(
+            data.attendance.lateCycleAbsent
+              ? `Late arrival — this is your ${data.lateCycleCount}${data.lateCycleCount === 3 ? "rd" : "th"} late day this month, so today is marked absent.`
+              : `Late arrival — tolerated for now (${data.lateCycleCount}/3 this cycle).`
+          );
+        } else {
+          setLateNotice(null);
+        }
       } else {
         const res  = await fetch(`${API}/punch-out`, {
           method: "POST",
@@ -290,6 +307,12 @@ const PunchAttendance = () => {
           <div className="pa__badge pa__badge--half-day">
             <i className="ti ti-clock-exclamation" /> Half-day
           </div>
+        )}
+
+        {lateNotice && (
+          <p className={lateNotice.includes("marked absent") ? "pa__error" : "pa__notice"}>
+            <i className="ti ti-info-circle" /> {lateNotice}
+          </p>
         )}
 
         {error && <p className="pa__error">{error}</p>}
