@@ -15,6 +15,15 @@ const fmtTime = (iso) => {
   return new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 };
 
+// Bare "10:11" / "9:54" — 12-hour, no AM/PM, no leading zero on the hour.
+// Used by the muster-roll export, which shows a single compact time per day.
+const fmtTimeBare = (iso) => {
+  if (!iso) return "--:--";
+  return new Date(iso)
+    .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+    .replace(/\s?[AP]M$/i, "");
+};
+
 const fmtMins = (mins) => {
   if (mins == null) return "—";
   const h = Math.floor(mins / 60);
@@ -424,7 +433,7 @@ const buildLeaveDatesByUser = (leaves, month) => {
 };
 
 // A muster-roll style month sheet: one column per calendar day, Sundays and
-// holidays as shaded separator columns, two rows per employee (punch times,
+// holidays as shaded separator columns, two rows per employee (punch-in time,
 // then a P/H/A/L status letter).
 const addMusterRollSheet = (workbook, records, month, holidays, leaves) => {
   const days = buildMonthDays(month, holidays);
@@ -440,9 +449,9 @@ const addMusterRollSheet = (workbook, records, month, holidays, leaves) => {
 
   const totalCols = 2 + days.length;
   sheet.getColumn(1).width = 6;
-  sheet.getColumn(2).width = 22;
+  sheet.getColumn(2).width = 20;
   days.forEach((d, i) => {
-    sheet.getColumn(3 + i).width = (d.isSunday || d.isHoliday) ? 4 : 9;
+    sheet.getColumn(3 + i).width = (d.isSunday || d.isHoliday) ? 4 : 7;
   });
 
   // Row 1 — title
@@ -523,7 +532,7 @@ const addMusterRollSheet = (workbook, records, month, holidays, leaves) => {
       const rec = dayMap.get(d.dateStr);
 
       if (rec) {
-        timeCell.value = `${fmtTime(rec.punchIn)}\n${fmtTime(rec.punchOut)}`;
+        timeCell.value = fmtTimeBare(rec.punchIn);
         const letter = STATUS_LETTER[rec.status] || "?";
         statusCell.value = letter;
         statusCell.font = { bold: true, color: { argb: LETTER_COLOR[letter] || "FF374151" } };
@@ -535,7 +544,7 @@ const addMusterRollSheet = (workbook, records, month, holidays, leaves) => {
         statusCell.font = { bold: true, color: { argb: LETTER_COLOR.A } };
       } // future day — left blank
 
-      timeCell.alignment   = { vertical: "middle", horizontal: "center", wrapText: true };
+      timeCell.alignment   = { vertical: "middle", horizontal: "center" };
       statusCell.alignment = { vertical: "middle", horizontal: "center" };
       if (band) {
         timeCell.fill   = { type: "pattern", pattern: "solid", fgColor: { argb: band } };
@@ -543,7 +552,7 @@ const addMusterRollSheet = (workbook, records, month, holidays, leaves) => {
       }
     });
 
-    sheet.getRow(timeRow).height = 28;
+    sheet.getRow(timeRow).height = 16;
     sheet.getRow(statusRow).height = 16;
     rowCursor = statusRow + 1;
   });
