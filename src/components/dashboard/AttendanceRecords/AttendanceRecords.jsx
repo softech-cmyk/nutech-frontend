@@ -557,7 +557,7 @@ const addMusterRollSheet = (workbook, records, month, holidays, leaves) => {
       const rec = dayMap.get(d.dateStr);
 
       if (rec) {
-        timeCell.value = fmtTimeBare(rec.punchIn);
+        timeCell.value = `${fmtTimeBare(rec.punchIn)}\n${fmtTimeBare(rec.punchOut)}`;
         const letter = STATUS_LETTER[rec.status] || "?";
         statusCell.value = letter;
         statusCell.font = { bold: true, color: { argb: LETTER_COLOR[letter] || "FF374151" } };
@@ -574,7 +574,7 @@ const addMusterRollSheet = (workbook, records, month, holidays, leaves) => {
         actualAbsentCount += 1; // no record, no leave — a genuine unexplained absence
       } // future day — left blank
 
-      timeCell.alignment   = { vertical: "middle", horizontal: "center" };
+      timeCell.alignment   = { vertical: "middle", horizontal: "center", wrapText: true };
       statusCell.alignment = { vertical: "middle", horizontal: "center" };
       if (band) {
         timeCell.fill   = { type: "pattern", pattern: "solid", fgColor: { argb: band } };
@@ -599,7 +599,7 @@ const addMusterRollSheet = (workbook, records, month, holidays, leaves) => {
       actualAbsentCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: band } };
     }
 
-    sheet.getRow(timeRow).height = 16;
+    sheet.getRow(timeRow).height = 26;
     sheet.getRow(statusRow).height = 16;
     rowCursor = statusRow + 1;
   });
