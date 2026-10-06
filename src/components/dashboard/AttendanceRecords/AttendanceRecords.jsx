@@ -447,12 +447,20 @@ const addMusterRollSheet = (workbook, records, month, holidays, leaves) => {
     views: [{ state: "frozen", xSplit: 2, ySplit: 3 }],
   });
 
-  const totalCols = 2 + days.length;
+  // Two trailing summary columns, after every day column: how many of this
+  // employee's absences came from the 3-day-late-cycle penalty specifically,
+  // versus genuine absences unrelated to lateness.
+  const latePenaltyCol = 3 + days.length;
+  const actualAbsentCol = latePenaltyCol + 1;
+  const totalCols = actualAbsentCol;
+
   sheet.getColumn(1).width = 6;
   sheet.getColumn(2).width = 20;
   days.forEach((d, i) => {
     sheet.getColumn(3 + i).width = (d.isSunday || d.isHoliday) ? 4 : 7;
   });
+  sheet.getColumn(latePenaltyCol).width = 11;
+  sheet.getColumn(actualAbsentCol).width = 11;
 
   // Row 1 — title
   sheet.mergeCells(1, 1, 1, totalCols);
@@ -497,6 +505,20 @@ const addMusterRollSheet = (workbook, records, month, holidays, leaves) => {
       cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: headerFill } };
     });
   });
+  sheet.mergeCells(2, latePenaltyCol, 3, latePenaltyCol);
+  const latePenaltyHeaderCell = sheet.getCell(2, latePenaltyCol);
+  latePenaltyHeaderCell.value = "Late Penalty\n(3-day cycle)";
+
+  sheet.mergeCells(2, actualAbsentCol, 3, actualAbsentCol);
+  const actualAbsentHeaderCell = sheet.getCell(2, actualAbsentCol);
+  actualAbsentHeaderCell.value = "Actual\nAbsent";
+
+  [latePenaltyHeaderCell, actualAbsentHeaderCell].forEach((cell) => {
+    cell.font = { bold: true, size: 10, color: { argb: "FFB91C1C" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFDE2E2" } };
+    cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+  });
+
   sheet.getRow(2).height = 18;
   sheet.getRow(3).height = 18;
 
@@ -523,6 +545,9 @@ const addMusterRollSheet = (workbook, records, month, holidays, leaves) => {
     nameCell.font = { bold: true, color: { argb: "FF14532D" } };
     if (band) { srCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: band } }; nameCell.fill = srCell.fill; }
 
+    let latePenaltyCount = 0;
+    let actualAbsentCount = 0;
+
     days.forEach((d, i) => {
       if (d.isSunday || d.isHoliday) return; // filled in below as a merged separator column
 
@@ -536,12 +561,17 @@ const addMusterRollSheet = (workbook, records, month, holidays, leaves) => {
         const letter = STATUS_LETTER[rec.status] || "?";
         statusCell.value = letter;
         statusCell.font = { bold: true, color: { argb: LETTER_COLOR[letter] || "FF374151" } };
+        if (rec.status === "absent") {
+          if (rec.lateCycleAbsent) latePenaltyCount += 1;
+          else actualAbsentCount += 1;
+        }
       } else if (leaveDates.has(d.dateStr)) {
         statusCell.value = "L";
         statusCell.font = { bold: true, color: { argb: LETTER_COLOR.L } };
       } else if (d.dateStr <= today) {
         statusCell.value = "A";
         statusCell.font = { bold: true, color: { argb: LETTER_COLOR.A } };
+        actualAbsentCount += 1; // no record, no leave — a genuine unexplained absence
       } // future day — left blank
 
       timeCell.alignment   = { vertical: "middle", horizontal: "center" };
@@ -551,6 +581,23 @@ const addMusterRollSheet = (workbook, records, month, holidays, leaves) => {
         statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: band } };
       }
     });
+
+    sheet.mergeCells(timeRow, latePenaltyCol, statusRow, latePenaltyCol);
+    const latePenaltyCell = sheet.getCell(timeRow, latePenaltyCol);
+    latePenaltyCell.value = latePenaltyCount;
+    latePenaltyCell.font = { bold: true, color: { argb: LETTER_COLOR.A } };
+    latePenaltyCell.alignment = { vertical: "middle", horizontal: "center" };
+
+    sheet.mergeCells(timeRow, actualAbsentCol, statusRow, actualAbsentCol);
+    const actualAbsentCell = sheet.getCell(timeRow, actualAbsentCol);
+    actualAbsentCell.value = actualAbsentCount;
+    actualAbsentCell.font = { bold: true, color: { argb: LETTER_COLOR.A } };
+    actualAbsentCell.alignment = { vertical: "middle", horizontal: "center" };
+
+    if (band) {
+      latePenaltyCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: band } };
+      actualAbsentCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: band } };
+    }
 
     sheet.getRow(timeRow).height = 16;
     sheet.getRow(statusRow).height = 16;
@@ -582,7 +629,10 @@ const addMusterRollSheet = (workbook, records, month, holidays, leaves) => {
   const legendRow = lastDataRow + 2;
   sheet.getCell(legendRow, 1).value = "Legend:";
   sheet.getCell(legendRow, 1).font = { bold: true };
-  sheet.getCell(legendRow, 2).value = "P = Present    H = Half Day    A = Absent    L = Leave";
+  sheet.getCell(legendRow, 2).value =
+    "P = Present    H = Half Day    A = Absent    L = Leave    " +
+    "Late Penalty = absent days from the 3rd/6th/9th... late-arrival rule    " +
+    "Actual Absent = absences unrelated to that penalty";
   sheet.getCell(legendRow, 2).font = { italic: true, color: { argb: "FF6B7280" } };
 
   return sheet;
