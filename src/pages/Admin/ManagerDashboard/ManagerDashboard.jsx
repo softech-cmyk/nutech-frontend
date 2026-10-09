@@ -59,9 +59,13 @@ const ManagerDashboard = () => {
       const meData = await meRes.json();
       if (meData.user?.name) setManagerName(meData.user.name);
 
-      // Fetch team attendance for today
-      const [todayRes, leavesRes, holidayRes] = await Promise.all([
-        fetch(`${API}/attendance/all?date=${todayStr()}`, {
+      // Fetch team attendance for today. /attendance/team (not /attendance/all)
+      // so this stays scoped to this manager's own reports — totalEmployees
+      // below is scoped the same way via /users/my-employees, and mixing a
+      // company-wide present count with a single manager's headcount would
+      // make the subtraction go negative and get clamped to 0.
+      const [todayRes, leavesRes, holidayRes, employeesRes] = await Promise.all([
+        fetch(`${API}/attendance/team?date=${todayStr()}`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch(`${API}/leaves/all`, {
@@ -70,20 +74,48 @@ const ManagerDashboard = () => {
         fetch(`${API}/holidays/today`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
+        fetch(`${API}/users/my-employees`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       const todayData    = await todayRes.json();
       const leavesData   = await leavesRes.json();
       const holidayData  = await holidayRes.json();
+      const employeesData = await employeesRes.json();
 
       setHoliday(holidayData.holiday || null);
+
+      const todayRecords = todayData.records || [];
+      const employees    = employeesData.employees || [];
+      const today        = todayStr();
 
       // A record with status "absent" (manually marked by a manager) still
       // counts as absent, not present — only present/half-day records count
       // toward who's actually in today.
-      const presentCount   = (todayData.records || []).filter((r) => r.status !== "absent").length;
-      const totalEmployees = meData.user ? await fetchEmployeeCount(token) : 0;
-      const absentCount    = holidayData.holiday ? 0 : Math.max(0, totalEmployees - presentCount);
+      const presentIds = new Set(
+        todayRecords.filter((r) => r.status !== "absent").map((r) => String(r.userId?._id || r.userId))
+      );
+      const explicitAbsentIds = new Set(
+        todayRecords.filter((r) => r.status === "absent").map((r) => String(r.userId?._id || r.userId))
+      );
+      // On approved leave today counts as neither present nor absent — unless
+      // there's also an explicit absent record (a manager's call overrides),
+      // matching the Absent Today page's own logic.
+      const onLeaveIds = new Set(
+        (leavesData.leaves || [])
+          .filter((l) => l.status === "approved" && today >= l.startDate && today <= l.endDate)
+          .map((l) => String(l.userId?._id || l.userId))
+      );
+
+      const presentCount   = presentIds.size;
+      const totalEmployees = employees.length;
+      const absentCount    = holidayData.holiday ? 0 : employees.filter((e) => {
+        const uid = String(e._id);
+        if (presentIds.has(uid)) return false;
+        if (onLeaveIds.has(uid) && !explicitAbsentIds.has(uid)) return false;
+        return true;
+      }).length;
       const pendingLeaves  = (leavesData.leaves || []).filter((l) => l.status === "pending").length;
       const approvedLeaves = (leavesData.leaves || []).filter((l) => l.status === "approved").length;
       const rejectedLeaves = (leavesData.leaves || []).filter((l) => l.status === "rejected").length;
@@ -106,18 +138,6 @@ const ManagerDashboard = () => {
       setInitialLoading(false);
     }
   }, [navigate]);
-
-  const fetchEmployeeCount = async (token) => {
-    try {
-      const res  = await fetch(`${API}/users/my-employees`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      return data.employees?.length || 0;
-    } catch {
-      return 0;
-    }
-  };
 
   useEffect(() => {
     fetchData();
