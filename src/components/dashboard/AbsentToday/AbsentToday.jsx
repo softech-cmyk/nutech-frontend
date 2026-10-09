@@ -38,19 +38,31 @@ const AbsentToday = () => {
 
     setLoading(true);
     try {
-      const [usersRes, attRes, holidayRes] = await Promise.all([
+      const [usersRes, attRes, holidayRes, leavesRes] = await Promise.all([
         fetch(`${API}/users/all`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API}/attendance/all?date=${todayStr()}`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API}/holidays/today`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API}/leaves/all`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
       const usersData   = await usersRes.json();
       const attData     = await attRes.json();
       const holidayData = await holidayRes.json();
+      const leavesData  = await leavesRes.json();
 
       setHoliday(holidayData.holiday || null);
 
       const records = attData.records || [];
+      const today = todayStr();
+
+      // Anyone on approved leave today isn't "absent" — they're on leave,
+      // a different thing entirely — so they're excluded below rather than
+      // showing up here needing to be marked or have their status changed.
+      const onLeaveIds = new Set(
+        (leavesData.leaves || [])
+          .filter((l) => l.status === "approved" && today >= l.startDate && today <= l.endDate)
+          .map((l) => String(l.userId?._id || l.userId))
+      );
 
       // A record with status "absent" (manually marked by a manager) means
       // the employee IS absent — it must not count as "has a record, so
@@ -68,7 +80,7 @@ const AbsentToday = () => {
       );
 
       const absentUsers = (usersData.users || [])
-        .filter((u) => !presentIds.has(String(u._id)))
+        .filter((u) => !presentIds.has(String(u._id)) && !onLeaveIds.has(String(u._id)))
         .map((u) => ({ ...u, existingRecord: absentRecordByUser.get(String(u._id)) || null }));
 
       setAbsent(absentUsers);
