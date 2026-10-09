@@ -80,7 +80,16 @@ const AbsentToday = () => {
       );
 
       const absentUsers = (usersData.users || [])
-        .filter((u) => !presentIds.has(String(u._id)) && !onLeaveIds.has(String(u._id)))
+        .filter((u) => {
+          const uid = String(u._id);
+          if (presentIds.has(uid)) return false;
+          // An explicit "absent" record (auto-marked or manager-regularized)
+          // always surfaces here for review, even if a leave happens to
+          // overlap the same date. Leave only explains an absence when
+          // there's no record at all to begin with.
+          if (onLeaveIds.has(uid) && !absentRecordByUser.has(uid)) return false;
+          return true;
+        })
         .map((u) => ({ ...u, existingRecord: absentRecordByUser.get(String(u._id)) || null }));
 
       setAbsent(absentUsers);
